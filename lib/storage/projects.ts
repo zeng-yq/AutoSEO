@@ -34,3 +34,8 @@ export async function removeProject(id: string): Promise<void> {
   const list = await getProjects();
   await save(list.filter((p) => p.id !== id));
 }
+
+/** 按 id 查询单个项目。供 background 取 domain 拼 GSC URL。 */
+export async function getProjectById(id: string): Promise<Project | undefined> {
+  return (await getProjects()).find((p) => p.id === id);
+}
