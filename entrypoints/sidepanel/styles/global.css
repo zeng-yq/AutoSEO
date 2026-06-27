@@ -15,8 +15,8 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -29,3 +29,26 @@ h1, h2, h3 {
 
 button { font-family: var(--font-sans); cursor: pointer; }
 button:disabled { cursor: not-allowed; }
+
+/* 侧边导航菜单项 */
+.side-nav__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  padding: 6px 10px 6px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.side-nav__item:hover { background: var(--color-surface-card); }
+.side-nav__item.is-active {
+  background: var(--color-surface-cream-strong);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 500;
+}

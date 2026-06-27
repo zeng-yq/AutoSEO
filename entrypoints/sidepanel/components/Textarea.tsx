@@ -3,10 +3,10 @@ export default function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAre
     <textarea
       {...props}
       style={{
-        width: '100%', padding: '10px 14px', resize: 'vertical',
+        width: '100%', padding: '8px 10px', resize: 'vertical',
         background: 'var(--color-canvas)', color: 'var(--color-ink)',
         border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-md)',
-        fontSize: 14, lineHeight: 1.55, fontFamily: 'var(--font-mono)', ...props.style,
+        fontSize: 13, lineHeight: 1.5, fontFamily: 'var(--font-mono)', ...props.style,
       }}
     />
   );

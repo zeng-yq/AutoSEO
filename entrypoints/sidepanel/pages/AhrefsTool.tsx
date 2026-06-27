@@ -7,7 +7,7 @@ import { COUNTRIES, buildAhrefsUrl, isValidCountryCode } from '@lib/ahrefs/url';
 const STORAGE_KEY = 'ahrefs:last';
 interface Last { country: string; keyword: string; }
 
-export default function AhrefsTool({ onBack }: { onBack: () => void }) {
+export default function AhrefsTool() {
   const [country, setCountry] = useState('us');
   const [keyword, setKeyword] = useState('');
   const [custom, setCustom] = useState(false);
@@ -35,11 +35,10 @@ export default function AhrefsTool({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div style={{ padding: 'var(--space-lg)' }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', padding: 0, marginBottom: 12 }}>← 返回</button>
-      <h2 style={{ fontSize: 24, marginBottom: 'var(--space-lg)' }}>Ahrefs KD 查询</h2>
+    <div style={{ padding: 'var(--space-md)' }}>
+      <h2 style={{ fontSize: 17, marginBottom: 'var(--space-md)' }}>Ahrefs KD 查询</h2>
 
-      <label style={{ display: 'block', fontSize: 13, color: 'var(--color-muted)', marginBottom: 6 }}>国家</label>
+      <label style={{ display: 'block', fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>国家</label>
       <Select value={country} options={options} onChange={(e) => {
         if (e.target.value === '__custom') { setCustom(true); setCountry(''); }
         else { setCustom(false); setCountry(e.target.value); }
@@ -48,12 +47,12 @@ export default function AhrefsTool({ onBack }: { onBack: () => void }) {
         <TextInput value={country} placeholder="两位代码，如 us" onChange={(e) => setCountry(e.target.value)} style={{ marginTop: 8 }} />
       )}
 
-      <label style={{ display: 'block', fontSize: 13, color: 'var(--color-muted)', margin: 'var(--space-md) 0 6px' }}>关键词</label>
+      <label style={{ display: 'block', fontSize: 12, color: 'var(--color-muted)', margin: 'var(--space-sm) 0 4px' }}>关键词</label>
       <TextInput value={keyword} placeholder="如 apple" onChange={(e) => setKeyword(e.target.value)} />
 
-      {error && <div style={{ color: 'var(--color-error)', fontSize: 13, marginTop: 8 }}>{error}</div>}
+      {error && <div style={{ color: 'var(--color-error)', fontSize: 12, marginTop: 6 }}>{error}</div>}
 
-      <Button onClick={open} disabled={!keyword.trim() || !isValidCountryCode(country)} style={{ marginTop: 'var(--space-lg)', width: '100%' }}>
+      <Button onClick={open} disabled={!keyword.trim() || !isValidCountryCode(country)} style={{ marginTop: 'var(--space-md)', width: '100%' }}>
         打开查询
       </Button>
     </div>

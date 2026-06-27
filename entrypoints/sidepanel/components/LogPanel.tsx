@@ -14,12 +14,12 @@ export default function LogPanel({ logs }: { logs: LogEntry[] }) {
   return (
     <div style={{
       background: 'var(--color-surface-dark)',
-      borderRadius: 'var(--radius-lg)',
-      padding: 'var(--space-md)',
+      borderRadius: 'var(--radius-md)',
+      padding: 'var(--space-sm)',
       fontFamily: 'var(--font-mono)',
       fontSize: 12,
       color: 'var(--color-on-dark)',
-      maxHeight: 200,
+      maxHeight: 160,
       overflow: 'auto',
     }}>
       {logs.length === 0 && <div style={{ color: 'var(--color-on-dark-soft)' }}>暂无日志</div>}

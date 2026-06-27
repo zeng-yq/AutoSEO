@@ -10,8 +10,8 @@ export default function Button({ variant = 'primary', style, ...rest }: ButtonPr
     <button
       {...rest}
       style={{
-        height: 40, padding: '0 20px', borderRadius: 'var(--radius-md)',
-        fontSize: 14, fontWeight: 500, lineHeight: 1, ...styles[variant], ...style,
+        height: 32, padding: '0 16px', borderRadius: 'var(--radius-md)',
+        fontSize: 13, fontWeight: 500, lineHeight: 1, ...styles[variant], ...style,
       }}
     />
   );
