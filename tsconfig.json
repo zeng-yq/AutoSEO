@@ -3,6 +3,13 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "chrome"]
+    "types": ["vitest/globals", "chrome"],
+    "baseUrl": ".",
+    "paths": {
+      "@lib/*": ["lib/*"],
+      "@components/*": ["entrypoints/sidepanel/components/*"],
+      "@pages/*": ["entrypoints/sidepanel/pages/*"],
+      "@hooks/*": ["entrypoints/sidepanel/hooks/*"]
+    }
   }
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import TopBar from './components/TopBar';
 import Home from './pages/Home';
+import AhrefsTool from './pages/AhrefsTool';
 function GscPlaceholder({ onBack }: { onBack: () => void }) { return <Placeholder title="GSC" onBack={onBack} />; }
-function AhrefsPlaceholder({ onBack }: { onBack: () => void }) { return <Placeholder title="Ahrefs" onBack={onBack} />; }
 function ProjectsPlaceholder({ onBack }: { onBack: () => void }) { return <Placeholder title="项目管理" onBack={onBack} />; }
 function Placeholder({ title, onBack }: { title: string; onBack: () => void }) {
   return (
@@ -20,7 +20,7 @@ export default function App() {
       <TopBar onHome={back} />
       {route === 'home' && <Home onNavigate={setRoute} />}
       {route === 'gsc' && <GscPlaceholder onBack={back} />}
-      {route === 'ahrefs' && <AhrefsPlaceholder onBack={back} />}
+      {route === 'ahrefs' && <AhrefsTool onBack={back} />}
       {route === 'projects' && <ProjectsPlaceholder onBack={back} />}
     </>
   );
