@@ -67,15 +67,6 @@ export function fmtMs(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 }
 
-// 模块自引用的命名空间槽：让单元测试可以 vi.spyOn(cdp, 'waitForPredicate')
-// 拦截 waitForStep 对它的内部调用（直接词法引用无法被 spyOn 覆盖，必须经命名空间分发）。
-// 仅在 waitForStep（运行时调用）内首次填充，避免模块加载期的顶层 await / 循环求值。
-const self: { ns: typeof import('./actions') | null } = { ns: null };
-async function ns(): Promise<typeof import('./actions')> {
-  // 动态 import 自身：模块早已完成求值，命中缓存同步 resolve，无重入风险。
-  return (self.ns ??= await import('./actions'));
-}
-
 /**
  * 等某信号就绪并自动产出「进入 / 完成 / 超时」步骤日志。
  * 内部仍调 waitForPredicate（超时返回 false 不抛），耗时由本函数测量写入 message。
@@ -89,7 +80,7 @@ export async function waitForStep(
   const phase = opts.phase ?? 'submit';
   opts.log?.({ level: 'info', phase, message: `${opts.name}…` });
   const start = Date.now();
-  const ok = await (await ns()).waitForPredicate(target, jsPredicate, {
+  const ok = await waitForPredicate(target, jsPredicate, {
     timeoutMs: opts.timeoutMs,
     intervalMs: opts.intervalMs,
   });

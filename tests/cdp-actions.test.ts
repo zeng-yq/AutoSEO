@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as cdp from '../lib/cdp/actions';
 import { waitForStep, fmtMs } from '../lib/cdp/actions';
 
 beforeEach(() => vi.restoreAllMocks());
@@ -11,7 +10,9 @@ describe('fmtMs', () => {
 
 describe('waitForStep', () => {
   it('成功：先打「进入 …」再打「✓(...)」两条 info，返回 true', async () => {
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+    // 在 chrome.debugger.sendCommand 边界 mock：evalJs→true → waitForPredicate 立即 return true
+    vi.spyOn(chrome.debugger, 'sendCommand' as never)
+      .mockResolvedValue({ result: { value: true } } as never);
     const log = vi.fn();
     const ok = await waitForStep({ tabId: 1 }, 'PRED', { name: '等输入框就绪', log });
     expect(ok).toBe(true);
@@ -22,10 +23,10 @@ describe('waitForStep', () => {
     expect(log.mock.calls[1][0].message).toMatch(/等输入框就绪 ✓ \(/);
   });
 
-  it('超时：打 warn「超时(...)」，返回 false', async () => {
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(false);
+  it('超时(timeoutMs=0)：打 warn「超时(...)」，返回 false', async () => {
+    // timeoutMs=0 → waitForPredicate 的 deadline 立即到，不进循环，return false（不调 send）
     const log = vi.fn();
-    const ok = await waitForStep({ tabId: 1 }, 'PRED', { name: '等检查结果', log });
+    const ok = await waitForStep({ tabId: 1 }, 'PRED', { name: '等检查结果', timeoutMs: 0, log });
     expect(ok).toBe(false);
     const last = log.mock.calls.at(-1)![0];
     expect(last.level).toBe('warn');
@@ -33,20 +34,16 @@ describe('waitForStep', () => {
   });
 
   it('phase 默认 submit，可覆盖为 inspect', async () => {
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+    vi.spyOn(chrome.debugger, 'sendCommand' as never)
+      .mockResolvedValue({ result: { value: true } } as never);
     const log = vi.fn();
     await waitForStep({ tabId: 1 }, 'PRED', { name: 'x', phase: 'inspect', log });
     expect(log.mock.calls[0][0].phase).toBe('inspect');
   });
 
-  it('透传 timeoutMs/intervalMs 给 waitForPredicate', async () => {
-    const spy = vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
-    await waitForStep({ tabId: 1 }, 'PRED', { name: 'x', timeoutMs: 30000, intervalMs: 1000 });
-    expect(spy).toHaveBeenCalledWith({ tabId: 1 }, 'PRED', { timeoutMs: 30000, intervalMs: 1000 });
-  });
-
   it('log 可选：不传不报错', async () => {
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+    vi.spyOn(chrome.debugger, 'sendCommand' as never)
+      .mockResolvedValue({ result: { value: true } } as never);
     await expect(waitForStep({ tabId: 1 }, 'PRED', { name: 'x' })).resolves.toBe(true);
   });
 });
