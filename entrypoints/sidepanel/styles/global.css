@@ -52,3 +52,29 @@ button:disabled { cursor: not-allowed; }
   color: var(--color-primary);
   font-weight: 500;
 }
+
+/* 顶部双 Tab（segmented 风） */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-hairline);
+}
+.tab {
+  flex: 1;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.tab:hover { background: var(--color-surface-card); color: var(--color-ink); }
+.tab.is-active {
+  background: var(--color-surface-cream-strong);
+  color: var(--color-primary);
+  border-color: var(--color-hairline);
+}
