@@ -22,7 +22,8 @@
  * 轮询「Indexing requested.」成功提示（60s）→ 清空输入框（供下一条复用）。
  */
 
-import { evalJs, waitForPredicate } from '../cdp/actions';
+import { evalJs, waitForStep } from '../cdp/actions';
+import type { StepLog } from '../cdp/actions';
 import { type Target } from '../cdp/client';
 import { PROBES } from './selectors';
 
@@ -75,21 +76,32 @@ const QUOTA_THRESHOLD = 3;
  *  9. 轮询「Indexing requested.」成功提示（§2.7，60s / 3s 间隔）；超时兜底判配额。
  *  10. native setter 清空输入框（§2.8，供下一条复用）。
  */
-export async function submitOne(target: Target, url: string): Promise<SubmitResult> {
+export async function submitOne(
+  target: Target,
+  url: string,
+  log?: StepLog,
+): Promise<SubmitResult> {
   // ① 等输入框就绪（§2.1）
-  await waitForPredicate(target, `!!(${PROBES.inspectInput})`, { timeoutMs: INPUT_READY_TIMEOUT });
+  const inputReady = await waitForStep(target, `!!(${PROBES.inspectInput})`, {
+    name: '等输入框就绪', timeoutMs: INPUT_READY_TIMEOUT, phase: 'inspect', log,
+  });
+  if (!inputReady) return { url, status: 'skipped', reason: '输入框未就绪' };
 
-  // ② native setter 填值（§2.2，URL 经 JSON.stringify 注入避免引号注入；不派发回车）
+  // ② native setter 填值（§2.2，URL 经 JSON.stringify 注入；不派发回车）
   await evalJs<boolean>(target, fillExpr(url));
+  log?.({ level: 'info', phase: 'inspect', message: '已填值' });
 
   // ③ 点击「Inspect」按钮（§2.3，页面内 el.click()；Bing 靠按钮触发检查）
   await evalJs<boolean>(target, clickExpr(PROBES.inspectBtn));
+  log?.({ level: 'info', phase: 'inspect', message: '点击 Inspect' });
 
   // ④ 等结果区出现（§2.4，getting 弹窗结束后 sections 非空）
-  const ready = await waitForPredicate(target, PROBES.resultReady, { timeoutMs: INSPECT_TIMEOUT });
+  const ready = await waitForStep(target, PROBES.resultReady, {
+    name: '等结果区', timeoutMs: INSPECT_TIMEOUT, phase: 'inspect', log,
+  });
   if (!ready) return { url, status: 'skipped', reason: '检查结果未出现' };
 
-  // ⑤ 分类：先判已索引（§2.4，只看文案；已索引页也显示 Request indexing 按钮，不能看按钮缺失）
+  // ⑤ 分类：先判已索引（§2.4，只看文案；已索引页也显示 Request indexing 按钮）
   if (await evalJs<boolean>(target, PROBES.isAlreadyIndexed)) {
     return { url, status: 'skipped', reason: '已索引' };
   }
@@ -101,38 +113,37 @@ export async function submitOne(target: Target, url: string): Promise<SubmitResu
 
   // ⑦ 点击「Request indexing」→ 弹出确认弹窗（§2.5）
   await evalJs<boolean>(target, clickExpr(PROBES.requestIndexingButton));
+  log?.({ level: 'info', phase: 'submit', message: '点击「Request indexing」' });
 
-  // ⑧ 等确认弹窗出现（§2.6）。以 role=dialog（含「Are you sure」）为权威就绪信号——比 submitBtn 更早、
-  //    更稳（chrome.debugger 后台 tab 下 querySelector('[data-tag=submitBtn]') 命中可能滞后；弹窗本体先就绪，
-  //    ⑨ 再多策略定位 Submit）。未出现则兜底判配额 + 输出诊断计数。
-  const confirmReady = await waitForPredicate(target, PROBES.confirmDialog, { timeoutMs: CONFIRM_TIMEOUT });
+  // ⑧ 等确认弹窗出现（§2.6）。以 role=dialog 为权威就绪信号。
+  const confirmReady = await waitForStep(target, PROBES.confirmDialog, {
+    name: '等确认弹窗', timeoutMs: CONFIRM_TIMEOUT, phase: 'submit', log,
+  });
   if (!confirmReady) {
     if (await evalJs<boolean>(target, PROBES.isQuota)) return { url, status: 'skipped', reason: '配额' };
     const diag = await evalJs<{ dialog: number; submit: number; deep: number }>(target, CONFIRM_DIAG_EXPR).catch(() => null);
     return { url, status: 'skipped', reason: `确认弹窗未出现${diag ? `(dialog=${diag.dialog},submit=${diag.submit},deep=${diag.deep})` : ''}` };
   }
 
-  // ⑨ 多策略定位 Submit（data-tag → 弹窗内 aria-label/文本 Submit → shadow 深度穿透）并点击；
-  //    Submit 禁用（配额耗尽）则跳过。点击后确认弹窗自动关闭 + 出现成功提示（§2.6）。
+  // ⑨ 多策略定位 Submit 并点击；Submit 禁用（配额耗尽）则跳过（§2.6）
   const submit = await evalJs<{ found: boolean; disabled: boolean; clicked: boolean }>(target, submitActionExpr());
   if (!submit.found) {
     const diag = await evalJs<{ dialog: number; submit: number; deep: number }>(target, CONFIRM_DIAG_EXPR).catch(() => null);
     return { url, status: 'skipped', reason: `Submit 未找到${diag ? `(dialog=${diag.dialog},submit=${diag.submit},deep=${diag.deep})` : ''}` };
   }
   if (submit.disabled) return { url, status: 'skipped', reason: '配额' };
+  log?.({ level: 'info', phase: 'submit', message: '点击 Submit' });
 
   // ⑩ 轮询「Indexing requested.」成功提示（§2.7，60s / 3s 间隔）
-  const ok = await waitForPredicate(target, PROBES.successIndicator, {
-    timeoutMs: SUCCESS_TIMEOUT,
-    intervalMs: SUCCESS_INTERVAL,
+  const ok = await waitForStep(target, PROBES.successIndicator, {
+    name: '等 Indexing requested', timeoutMs: SUCCESS_TIMEOUT, intervalMs: SUCCESS_INTERVAL, phase: 'submit', log,
   });
   if (!ok) {
-    // 兜底：判配额（successIndicator 未出现且命中 quota 类文案）
     if (await evalJs<boolean>(target, PROBES.isQuota)) return { url, status: 'skipped', reason: '配额' };
     return { url, status: 'skipped', reason: '提交未确认' };
   }
 
-  // ⑪ 清空输入框（§2.8，供下一条 URL 复用，best-effort，不阻塞结果）
+  // ⑪ 清空输入框（§2.8，供下一条复用，best-effort）
   await resetInput(target).catch(() => undefined);
 
   return { url, status: 'ok' };
@@ -165,9 +176,11 @@ export async function runBatch(
 
     let r: SubmitResult;
     try {
-      r = await submitOne(target, url);
+      r = await submitOne(target, url, cb.onLog);
     } catch (e) {
-      r = { url, status: 'skipped', reason: (e as Error).message };
+      const msg = (e as Error).message ?? String(e);
+      cb.onLog?.({ level: 'error', phase: 'submit', message: `步骤异常: ${msg}` });
+      r = { url, status: 'skipped', reason: msg };
     }
     results.push(r);
     cb.onProgress?.({ total: urls.length, done: i + 1, currentUrl: url, results });
