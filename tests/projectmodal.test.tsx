@@ -1,6 +1,6 @@
 // tests/projectmodal.test.tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import ProjectModal from '../entrypoints/sidepanel/components/ProjectModal';
 
 describe('ProjectModal', () => {
@@ -11,16 +11,16 @@ describe('ProjectModal', () => {
     const item = await screen.findByText('modal-test.com');
     expect(item).toBeTruthy();
   });
-  it('遮罩点击触发 onClose', () => {
+  it('遮罩点击触发 onClose', async () => {
     const onClose = vi.fn();
     const { container } = render(<ProjectModal onClose={onClose} />);
-    fireEvent.mouseDown(container.querySelector('.modal__overlay')!);
+    await act(async () => { fireEvent.mouseDown(container.querySelector('.modal__overlay')!); });
     expect(onClose).toHaveBeenCalledOnce();
   });
-  it('ESC 触发 onClose', () => {
+  it('ESC 触发 onClose', async () => {
     const onClose = vi.fn();
     render(<ProjectModal onClose={onClose} />);
-    fireEvent.keyDown(window, { key: 'Escape' });
+    await act(async () => { fireEvent.keyDown(window, { key: 'Escape' }); });
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
