@@ -6,16 +6,16 @@ import { PROBES } from '../lib/gsc/selectors';
 /**
  * GSC flow 单测。
  *
- * 策略：直接 mock `lib/cdp/actions` 的两个原语（evalJs / waitForPredicate），
+ * 策略：直接 mock `lib/cdp/actions` 的两个原语（evalJs / waitForStep），
  * 让 `submitOne` 的步骤机在受控输入下推进，从而验证「真实流程判定」而非自证。
  *
  * mockEvalSeq：按 evalJs 调用顺序返回值（queue）。
- * waitForPredicate 默认返回 true（已就绪），仅在需要测「超时未确认」时覆盖。
+ * waitForStep 默认返回 true（已就绪），仅在需要测「超时未确认」时覆盖。
  */
 function mockEvalSeq(values: unknown[]) {
   const q = [...values];
   vi.spyOn(cdp, 'evalJs').mockImplementation(async () => q.shift() as never);
-  vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+  vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
 }
 
 /**
@@ -32,7 +32,7 @@ function mockOkPath() {
     if (expr.includes('aria-disabled')) return { button: true, ariaDisabled: 'false' } as never;
     return true as never;
   });
-  vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+  vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
 }
 
 beforeEach(() => {
@@ -49,7 +49,7 @@ describe('submitOne', () => {
     //   5) 分类 isQuota → false
     //   6) 页面内 el.click() 点击按钮（返回 true）
     //   7) 重置输入框（返回 true）
-    // waitForPredicate（输入就绪 / 结果信号 / 成功 toast）默认 true。
+    // waitForStep（输入就绪 / 结果信号 / 成功 toast）默认 true。
     mockEvalSeq([true, { button: true, ariaDisabled: 'false' }, false, false, false, true, true]);
 
     const r = await submitOne({ tabId: 1 }, 'https://bottleneck-checker.com/es/');
@@ -63,7 +63,7 @@ describe('submitOne', () => {
     );
     expect(clickCall).toBeTruthy();
     // 关键：成功 toast 轮询用了 180s 超时（gsc-probe §2.7）
-    expect(cdp.waitForPredicate).toHaveBeenCalledWith(
+    expect(cdp.waitForStep).toHaveBeenCalledWith(
       { tabId: 1 },
       PROBES.successIndicator,
       expect.objectContaining({ timeoutMs: 180000, intervalMs: 6000 }),
@@ -121,8 +121,8 @@ describe('submitOne', () => {
 
   it('点击后成功 toast 超时未出现 → skipped(提交未确认)', async () => {
     mockEvalSeq([true, { button: true, ariaDisabled: 'false' }, false, false, false, true, true]);
-    // 成功 toast 轮询超时（waitForPredicate 返回 false）
-    vi.spyOn(cdp, 'waitForPredicate').mockImplementation(async (_t, expr, _o) => {
+    // 成功 toast 轮询超时（waitForStep 返回 false）
+    vi.spyOn(cdp, 'waitForStep').mockImplementation(async (_t, expr, _o) => {
       // 输入就绪 / 结果信号为 true；successIndicator 为 false
       return expr !== PROBES.successIndicator;
     });
@@ -143,6 +143,26 @@ describe('submitOne', () => {
     // URL 通过 JSON.stringify 注入，避免引号注入
     expect(fillCall![1]).toContain(JSON.stringify('https://x.com/'));
   });
+
+  it('① 输入框超时 → skipped(输入框未就绪)，不再静默滑入下一步', async () => {
+    vi.spyOn(cdp, 'evalJs').mockResolvedValue(true as never);
+    vi.spyOn(cdp, 'waitForStep').mockResolvedValue(false); // 所有等待超时
+    const r = await submitOne({ tabId: 1 }, 'https://x.com/');
+    expect(r.status).toBe('skipped');
+    expect(r.reason).toMatch(/输入框未就绪/);
+  });
+
+  it('③ 检查结果超时 → skipped(检查结果未出现)', async () => {
+    vi.spyOn(cdp, 'evalJs').mockResolvedValue(true as never);
+    let first = true;
+    vi.spyOn(cdp, 'waitForStep').mockImplementation(async () => {
+      if (first) { first = false; return true; } // ① 输入框就绪
+      return false; // ③ 结果超时
+    });
+    const r = await submitOne({ tabId: 1 }, 'https://x.com/');
+    expect(r.status).toBe('skipped');
+    expect(r.reason).toMatch(/检查结果未出现/);
+  });
 });
 
 describe('runBatch', () => {
@@ -158,7 +178,7 @@ describe('runBatch', () => {
       if (expr.includes('data-autoseo')) return true as never;
       return false as never;
     });
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+    vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
     vi.spyOn(cdp, 'clickReal').mockResolvedValue(true);
 
     const urls = Array.from({ length: 10 }, (_, i) => `https://bottleneck-checker.com/p${i}`);
@@ -190,7 +210,7 @@ describe('runBatch', () => {
       // 打标记 / reset / 其它：默认 true
       return true as never;
     });
-    vi.spyOn(cdp, 'waitForPredicate').mockResolvedValue(true);
+    vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
     vi.spyOn(cdp, 'clickReal').mockResolvedValue(true);
 
     const urls = quotaStates.map((_, i) => `https://x.com/${i}`);
@@ -225,5 +245,19 @@ describe('runBatch', () => {
     await runBatch({ tabId: 1 }, ['https://a.com/'], { onProgress, onLog });
     expect(onProgress).toHaveBeenCalledTimes(1);
     expect(onLog).toHaveBeenCalled();
+  });
+
+  it('埋点：onLog 含 inspect 与 submit 两个 phase，submit 含 → 已提交', async () => {
+    mockOkPath();
+    const onLog = vi.fn();
+    await runBatch({ tabId: 1 }, ['https://a.com/'], { onLog });
+    const phases = new Set(onLog.mock.calls.map((c) => (c[0] as { phase?: string }).phase));
+    expect(phases.has('inspect')).toBe(true);
+    expect(phases.has('submit')).toBe(true);
+    const submitted = onLog.mock.calls.find(
+      (c) => (c[0] as { phase?: string; message?: string }).phase === 'submit'
+        && (c[0] as { message?: string }).message?.startsWith('→ 已提交'),
+    );
+    expect(submitted).toBeTruthy();
   });
 });

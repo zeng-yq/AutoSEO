@@ -18,7 +18,8 @@
  * 轮询成功 toast（180s）→ 清空输入框（供下一条复用）。
  */
 
-import { evalJs, waitForPredicate } from '../cdp/actions';
+import { evalJs, waitForPredicate, waitForStep } from '../cdp/actions';
+import type { StepLog } from '../cdp/actions';
 import { type Target } from '../cdp/client';
 import { PROBES } from './selectors';
 
@@ -64,9 +65,16 @@ const QUOTA_THRESHOLD = 3;
  *  7. 轮询成功 toast（§2.7，单按钮流程，180s）。
  *  8. native setter 清空输入框（§2.8，供下一条复用）。
  */
-export async function submitOne(target: Target, url: string): Promise<SubmitResult> {
-  // ① 等输入框就绪（§2.1）
-  await waitForPredicate(target, `!!(${PROBES.inspectInput})`, { timeoutMs: INPUT_READY_TIMEOUT });
+export async function submitOne(
+  target: Target,
+  url: string,
+  log?: StepLog,
+): Promise<SubmitResult> {
+  // ① 等输入框就绪（§2.1）——超时即 skipped，不再静默滑入下一步
+  const inputReady = await waitForStep(target, `!!(${PROBES.inspectInput})`, {
+    name: '等输入框就绪', timeoutMs: INPUT_READY_TIMEOUT, phase: 'inspect', log,
+  });
+  if (!inputReady) return { url, status: 'skipped', reason: '输入框未就绪' };
 
   // ② native setter 填值 + Enter（§2.2 verbatim，URL 经 JSON.stringify 注入避免引号注入）
   const fillExpr =
@@ -81,21 +89,23 @@ export async function submitOne(target: Target, url: string): Promise<SubmitResu
     `return true;` +
     `})()`;
   await evalJs<boolean>(target, fillExpr);
+  log?.({ level: 'info', phase: 'inspect', message: '已填值并回车' });
 
-  // ③ 等待检查结果信号（任一命中即视为结果区已加载）
+  // ③ 等检查结果信号（任一命中即视为结果区已加载）——超时即 skipped
   const resultReady =
     `(${PROBES.requestIndexingButton}) || (${PROBES.isAlreadyIndexed}) || (${PROBES.isQuota}) || (${PROBES.isNotOwned})`;
-  await waitForPredicate(target, resultReady, { timeoutMs: INSPECT_TIMEOUT });
+  const ready = await waitForStep(target, resultReady, {
+    name: '等检查结果', timeoutMs: INSPECT_TIMEOUT, phase: 'inspect', log,
+  });
+  if (!ready) return { url, status: 'skipped', reason: '检查结果未出现' };
 
-  // ④ 先找「请求编入索引」按钮 + 读 aria-disabled（§2.3：DIV[role=button]，无 disabled 属性）。
-  //    ⚠️ 按钮探测**不能**用于判定「已索引」——实测（2026-06-28，gsc-probe §2.4 修订）：
-  //    已索引与未索引页面都会显示该按钮（aria-disabled=false）。已索引与否只看状态文案。
+  // ④ 找「请求编入索引」按钮 + 读 aria-disabled（§2.3：DIV[role=button]，无 disabled 属性）。
+  //    ⚠️ 按钮探测不能用于判定「已索引」——两态都有按钮（gsc-probe §2.4）。
   const btnInfo = await evalJs<{ button: boolean; ariaDisabled: string } | null>(target, btnProbeExpr());
   const hasButton = !!btnInfo?.button;
+  log?.({ level: 'info', phase: 'inspect', message: `按钮 aria-disabled=${btnInfo?.ariaDisabled ?? 'null'}` });
 
   // ⑤ 分类（顺序：已索引 → 不属于 → 配额 → 按钮态）
-  //    「已索引」只看 isAlreadyIndexed 状态文案，**不**叠加按钮缺失条件。否则已索引 URL
-  //    （按钮仍在）会跳过本分支，被误判为可提交并点击「请求编入索引」。
   if (await evalJs<boolean>(target, PROBES.isAlreadyIndexed)) {
     return { url, status: 'skipped', reason: '已索引' };
   }
@@ -105,19 +115,15 @@ export async function submitOne(target: Target, url: string): Promise<SubmitResu
   if (await evalJs<boolean>(target, PROBES.isQuota)) {
     return { url, status: 'skipped', reason: '配额' };
   }
-
-  // 按钮存在性 / 启用态判定
   if (!hasButton) {
     return { url, status: 'skipped', reason: '无请求编入索引按钮' };
   }
-  // aria-disabled 可能是 'false' / 'true' / 缺省（缺省视为启用）
   const disabled = btnInfo!.ariaDisabled != null && btnInfo!.ariaDisabled !== 'false';
   if (disabled) {
     return { url, status: 'skipped', reason: '按钮禁用' };
   }
 
-  // ⑥ 点击「请求编入索引」。⚠️ chrome.debugger 后台 tab 下 Input.dispatchMouseEvent 不触发 React
-  //    点击（已实测）；改用页面内 el.click()——Runtime.evaluate 里的纯 DOM 调用，后台 tab 可靠（§2.3）。
+  // ⑥ 点击「请求编入索引」（页面内 el.click()，§2.3）
   const clickExpr =
     `(() => {` +
     `const b = ${PROBES.requestIndexingButton};` +
@@ -127,15 +133,15 @@ export async function submitOne(target: Target, url: string): Promise<SubmitResu
     `return true;` +
     `})()`;
   await evalJs<boolean>(target, clickExpr);
+  log?.({ level: 'info', phase: 'submit', message: '点击「请求编入索引」' });
 
   // ⑦ 单按钮流程：轮询成功 toast（§2.7，180s / 6s 间隔）
-  const ok = await waitForPredicate(target, PROBES.successIndicator, {
-    timeoutMs: SUCCESS_TIMEOUT,
-    intervalMs: SUCCESS_INTERVAL,
+  const ok = await waitForStep(target, PROBES.successIndicator, {
+    name: '等成功提示（最长180s）', timeoutMs: SUCCESS_TIMEOUT, intervalMs: SUCCESS_INTERVAL, phase: 'submit', log,
   });
   if (!ok) return { url, status: 'skipped', reason: '提交未确认' };
 
-  // ⑧ 清空输入框（§2.8，供下一条 URL 复用，best-effort，不阻塞结果）
+  // ⑧ 清空输入框（§2.8，best-effort，不阻塞结果）
   await resetInput(target).catch(() => undefined);
 
   return { url, status: 'ok' };
@@ -167,12 +173,20 @@ export async function runBatch(
 
     let r: SubmitResult;
     try {
-      r = await submitOne(target, url);
+      r = await submitOne(target, url, cb.onLog);
     } catch (e) {
-      r = { url, status: 'skipped', reason: (e as Error).message };
+      const msg = (e as Error).message ?? String(e);
+      cb.onLog?.({ level: 'error', phase: 'submit', message: `步骤异常: ${msg}` });
+      r = { url, status: 'skipped', reason: msg };
     }
     results.push(r);
     cb.onProgress?.({ total: urls.length, done: i + 1, currentUrl: url, results });
+    // 每条结果上日志（含 reason），与 Bing 一致
+    cb.onLog?.({
+      level: r.status === 'ok' || r.reason === '已索引' ? 'info' : 'warn',
+      phase: 'submit',
+      message: r.reason ? `→ ${r.reason}` : '→ 已提交',
+    });
 
     if (r.reason === '配额') {
       quotaStreak += 1;
