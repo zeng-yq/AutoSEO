@@ -175,7 +175,6 @@ export default defineBackground(() => {
       }
       emit(port, { type: 'GSC_LOG', level: 'info', phase: 'system', message: '登录态正常' });
 
-
       // 批量提交；stopRequested 作为 shouldStop 传入，GSC_CANCEL 可在下一条 URL 前中止。
       const summary = await runBatch(target, msg.urls, {
         onProgress: (s) =>
@@ -270,7 +269,6 @@ export default defineBackground(() => {
         return;
       }
       emit(port, { type: 'BING_LOG', level: 'info', phase: 'system', message: '登录态正常' });
-
 
       // 批量提交；shouldStop 接闭包 stop 标志，BING_CANCEL 可在下一条 URL 前中止。
       const summary = await bingRunBatch(target, msg.urls, {

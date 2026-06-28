@@ -179,7 +179,6 @@ describe('runBatch', () => {
       return false as never;
     });
     vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
-    vi.spyOn(cdp, 'clickReal').mockResolvedValue(true);
 
     const urls = Array.from({ length: 10 }, (_, i) => `https://bottleneck-checker.com/p${i}`);
     const summary = await runBatch({ tabId: 1 }, urls, {});
@@ -211,7 +210,6 @@ describe('runBatch', () => {
       return true as never;
     });
     vi.spyOn(cdp, 'waitForStep').mockResolvedValue(true);
-    vi.spyOn(cdp, 'clickReal').mockResolvedValue(true);
 
     const urls = quotaStates.map((_, i) => `https://x.com/${i}`);
     const summary = await runBatch({ tabId: 1 }, urls, {});

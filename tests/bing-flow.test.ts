@@ -13,11 +13,6 @@ import { PROBES } from '../lib/bing/selectors';
  *
  * 注：submitOne 改造后 ①④⑧⑩ 调 waitForStep（actions.ts 内部对 waitForPredicate 是同文件词法直调，
  * 无法被 vi.spyOn 拦截），故这里 spy waitForStep 而非 waitForPredicate。
- * 让 submitOne 在受控输入下推进，验证「真实流程判定」而非自证。
- *
- * 与 GSC 的关键差异（测试重点）：
- *  - 触发 inspect 用**点击按钮**（非回车）。
- *  - **两步按钮**：Request indexing → 确认弹窗（⑧ 以 role=dialog 为就绪信号）→ Submit（⑨ 多策略定位）。
  */
 
 /**

@@ -18,7 +18,7 @@
  * 轮询成功 toast（180s）→ 清空输入框（供下一条复用）。
  */
 
-import { evalJs, waitForPredicate, waitForStep } from '../cdp/actions';
+import { evalJs, waitForStep } from '../cdp/actions';
 import type { StepLog } from '../cdp/actions';
 import { type Target } from '../cdp/client';
 import { PROBES } from './selectors';
