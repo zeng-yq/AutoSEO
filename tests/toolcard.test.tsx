@@ -11,10 +11,11 @@ describe('ToolCard', () => {
     fireEvent.click(screen.getByText('网站提交'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
-  it('disabled 时不触发 onClick，Enter 仍可达性触发', () => {
+  it('disabled 时点击与 Enter 均不触发 onClick', () => {
     const onClick = vi.fn();
     render(<ToolCard icon={<IconSubmit />} title="robots.txt" onClick={onClick} disabled />);
     fireEvent.click(screen.getByText('robots.txt'));
+    fireEvent.keyDown(screen.getByText('robots.txt'), { key: 'Enter' });
     expect(onClick).not.toHaveBeenCalled();
   });
 });
