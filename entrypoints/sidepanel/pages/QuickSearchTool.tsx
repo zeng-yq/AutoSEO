@@ -16,7 +16,9 @@ export default function QuickSearchTool({ keyword }: Props) {
           disabled={disabled}
           style={{ flex: 1 }}
         >
-          用 Google 搜
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <GoogleLogo size={14} /> 用 Google 搜
+          </span>
         </Button>
         <Button
           variant="secondary"
@@ -24,7 +26,9 @@ export default function QuickSearchTool({ keyword }: Props) {
           disabled={disabled}
           style={{ flex: 1 }}
         >
-          用 Bing 搜
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <BingLogo size={14} /> 用 Bing 搜
+          </span>
         </Button>
       </div>
     </ToolPanel>

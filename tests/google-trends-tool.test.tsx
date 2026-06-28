@@ -24,4 +24,12 @@ describe('GoogleTrendsTool', () => {
     expect(url.startsWith('https://trends.google.com/explore')).toBe(true);
     expect(url).toContain('q=apple');
   });
+  it('挂载时从 storage 恢复上次的天数/对比词/地区', () => {
+    chrome.storage.local.set({ 'kw-tools:trends': { date: 'now 7-d', compare: 'chatgpt', geo: 'US' } });
+    render(<GoogleTrendsTool keyword="apple" />);
+    // 天数/地区是原生 <select>，对比词是 <input>
+    expect(screen.getByText('7 天')).toBeInTheDocument();           // date select 显示 "7 天"
+    expect(screen.getByText('美国 (US)')).toBeInTheDocument();      // geo select 显示 "美国 (US)"
+    expect(screen.getByDisplayValue('chatgpt')).toBeInTheDocument(); // compare combobox input 值
+  });
 });

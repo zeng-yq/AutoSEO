@@ -24,9 +24,9 @@ export default function GoogleTrendsTool({ keyword }: Props) {
     chrome.storage.local.get(STORAGE_KEY, (items) => {
       const last = items[STORAGE_KEY] as Partial<Last> | undefined;
       if (last) {
-        if (last.date) setDate(last.date);
+        if (typeof last.date === 'string') setDate(last.date);
         if (typeof last.compare === 'string') setCompare(last.compare);
-        if (last.geo) setGeo(last.geo);
+        if (typeof last.geo === 'string') setGeo(last.geo);
       }
     });
   }, []);
