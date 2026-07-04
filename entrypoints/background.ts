@@ -85,7 +85,7 @@ export default defineBackground(() => {
       chrome.tabs
         .create({ url: msg.url, active: true })
         .then(() => sendResponse({ ok: true }))
-        .catch((err: Error) => sendResponse({ ok: false, error: err.message }));
+        .catch((err: unknown) => sendResponse({ ok: false, error: err instanceof Error ? err.message : String(err) }));
       return true;
     }
     return false;

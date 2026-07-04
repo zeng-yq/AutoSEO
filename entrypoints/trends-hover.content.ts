@@ -24,8 +24,9 @@ export default defineContentScript({
     }
 
     document.body.addEventListener('mouseover', (e) => {
-      const target = e.target as HTMLElement;
-      if (!target || isHoverButton(target)) return;
+      if (!(e.target instanceof HTMLElement)) return;
+      const target = e.target;
+      if (isHoverButton(target)) return;
 
       // 先取消之前的隐藏计时，避免快速重 hover 时按钮被误删。
       if (hideTimer) {

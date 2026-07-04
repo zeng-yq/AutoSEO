@@ -53,25 +53,29 @@ export function mountHoverButton(anchor: HTMLElement, onAsk: () => void): void {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
+  // 先显示按钮才能拿到真实尺寸，但用 visibility:hidden 避免在错误位置闪烁。
+  btn.style.display = 'block';
+  btn.style.visibility = 'hidden';
+  const btnWidth = btn.offsetWidth || 72;
+  const btnHeight = btn.offsetHeight || 24;
+
   // 默认放在关键词右侧（fixed 定位使用视口坐标，不带 scroll 偏移）。
   let left = rect.right + GAP;
   let top = rect.top;
 
   // 如果右侧空间不足，放到左侧
-  const btnWidth = btn.offsetWidth || 72;
   if (left + btnWidth > viewportWidth) {
     left = rect.left - btnWidth - GAP;
   }
 
   // 如果底部空间不足，向上微调
-  const btnHeight = btn.offsetHeight || 24;
   if (top + btnHeight > viewportHeight) {
     top = rect.bottom - btnHeight;
   }
 
   btn.style.left = `${left}px`;
   btn.style.top = `${top}px`;
-  btn.style.display = 'block';
+  btn.style.visibility = 'visible';
 }
 
 export function destroyHoverButton(): void {

@@ -40,17 +40,9 @@ function waitForElement(
 
 /** 查找发送按钮。 */
 function findSendButton(): HTMLElement | null {
-  const explicit = document.querySelector(
+  return document.querySelector(
     '[data-test-id="send-button"], button[aria-label*="Send" i], button[aria-label*="发送" i]',
   ) as HTMLElement | null;
-  if (explicit) return explicit;
-
-  const buttons = Array.from(document.querySelectorAll('button'));
-  return (
-    buttons.find((b) => /send|submit|发送/i.test(b.textContent ?? '')) ||
-    buttons.find((b) => b.querySelector('svg, mwc-icon, [data-icon-name*="send" i]')) ||
-    null
-  );
 }
 
 /** 设置输入值并触发 React / 框架能感知的事件。 */
