@@ -4,9 +4,13 @@ import { render, screen } from '@testing-library/react';
 import KeywordTools from '../entrypoints/sidepanel/pages/KeywordTools';
 
 describe('KeywordTools', () => {
-  it('渲染板块标题、公共关键词输入与三张工具卡片', () => {
+  it('不再渲染重复的「关键词工具」h2(TabBar 已有该 tab)', () => {
     render(<KeywordTools />);
-    expect(screen.getByText('关键词工具')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '关键词工具' })).toBeNull();
+  });
+
+  it('渲染公共关键词输入与三张工具卡片', () => {
+    render(<KeywordTools />);
     expect(screen.getByPlaceholderText('如 apple')).toBeInTheDocument();
     // Ahrefs
     expect(screen.getByText('Ahrefs')).toBeInTheDocument();

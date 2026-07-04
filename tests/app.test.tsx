@@ -17,7 +17,7 @@ describe('App', () => {
     expect(screen.getByText('网站工具')).toBeInTheDocument();
     expect(screen.getByText('网站提交')).toBeInTheDocument();
     fireEvent.click(screen.getByText('关键词工具'));
-    expect(screen.getByText('关键词工具', { selector: 'h2' })).toBeInTheDocument();
+    expect(screen.getByText('Ahrefs')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('如 apple')).toBeInTheDocument();
   });
 });

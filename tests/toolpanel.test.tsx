@@ -19,4 +19,12 @@ describe('ToolPanel', () => {
     expect(screen.getByText('T')).toBeInTheDocument();
     expect(screen.queryByText('undefined')).toBeNull();
   });
+  it('传 action 时渲染到 header 区域', () => {
+    render(
+      <ToolPanel logo={<span />} title="T" action={<button type="button">动作</button>}>
+        <i>x</i>
+      </ToolPanel>,
+    );
+    expect(screen.getByText('动作')).toBeInTheDocument();
+  });
 });
