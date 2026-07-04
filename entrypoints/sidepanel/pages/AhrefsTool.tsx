@@ -10,7 +10,13 @@ const STORAGE_KEY = 'ahrefs:last';
 interface Last { country: string; }
 interface Props { keyword: string; }
 
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 };
+const rowLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--color-muted)',
+  width: 44,
+  flexShrink: 0,
+  paddingTop: 7,
+};
 
 export default function AhrefsTool({ keyword }: Props) {
   const [country, setCountry] = useState('us');
@@ -37,33 +43,36 @@ export default function AhrefsTool({ keyword }: Props) {
     }
   }
 
+  const canOpen = !keyword.trim() || !isValidCountryCode(country);
+
   return (
-    <ToolPanel logo={<AhrefsLogo size={18} />} title="Ahrefs" subtitle="关键词难度查询">
-      <label style={labelStyle}>国家</label>
-      <Select
-        value={country}
-        options={options}
-        onChange={(e) => {
-          if (e.target.value === '__custom') { setCustom(true); setCountry(''); }
-          else { setCustom(false); setCountry(e.target.value); }
-        }}
-      />
+    <ToolPanel
+      logo={<AhrefsLogo size={18} />}
+      title="Ahrefs"
+      subtitle="关键词难度查询"
+      action={<Button onClick={open} disabled={canOpen}>打开查询</Button>}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+        <span style={rowLabelStyle}>国家</span>
+        <Select
+          value={country}
+          options={options}
+          onChange={(e) => {
+            if (e.target.value === '__custom') { setCustom(true); setCountry(''); }
+            else { setCustom(false); setCountry(e.target.value); }
+          }}
+          style={{ flex: 1, width: 'auto' }}
+        />
+      </div>
       {custom && (
         <TextInput
           value={country}
-          placeholder="两位代码，如 us"
+          placeholder="两位代码,如 us"
           onChange={(e) => setCountry(e.target.value)}
           style={{ marginTop: 8 }}
         />
       )}
       {error && <div style={{ color: 'var(--color-error)', fontSize: 12, marginTop: 6 }}>{error}</div>}
-      <Button
-        onClick={open}
-        disabled={!keyword.trim() || !isValidCountryCode(country)}
-        style={{ marginTop: 'var(--space-sm)', width: '100%' }}
-      >
-        打开查询
-      </Button>
     </ToolPanel>
   );
 }
