@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   encodeXGeo,
   resolveGeo,
+  applyGeo,
+  getGeoPref,
+  setGeoPref,
   GEO_REGIONS,
+  GEO_STORAGE_KEY,
   DEFAULT_GEO_CODE,
   GEO_OFF,
 } from '../lib/quicksearch/geo';
@@ -51,5 +55,94 @@ describe('GEO_REGIONS 数据完整性', () => {
   it('默认值与关闭值常量', () => {
     expect(DEFAULT_GEO_CODE).toBe('US');
     expect(GEO_OFF).toBe('OFF');
+  });
+});
+
+/**
+ * chrome.declarativeNetRequest / cookies 在 tests/setup.ts 未 mock，
+ * 本文件内补一个最小 mock，返回可断言的 spy。
+ */
+function installDnrCookieMocks(cookies: chrome.cookies.Cookie[] = []) {
+  const dnr = {
+    updateSessionRules: vi.fn(async (_opts: unknown) => {}),
+  };
+  const cookiesApi = {
+    getAll: vi.fn(async (_filter: { name: string }) => cookies),
+    remove: vi.fn(async (_details: { name: string; url: string }) => ({})),
+  };
+  (chrome as unknown as { declarativeNetRequest: unknown }).declarativeNetRequest = dnr;
+  (chrome as unknown as { cookies: unknown }).cookies = cookiesApi;
+  return { dnr, cookiesApi };
+}
+
+describe('applyGeo', () => {
+  it('传 region：先删旧规则 + 清 UULE，再加含 x-geo / accept-language 的新规则', async () => {
+    const { dnr, cookiesApi } = installDnrCookieMocks([
+      { name: 'UULE', domain: '.google.com', path: '/' } as chrome.cookies.Cookie,
+    ]);
+    await applyGeo(resolveGeo('DE'));
+
+    expect(dnr.updateSessionRules).toHaveBeenCalledTimes(2);
+    expect(dnr.updateSessionRules).toHaveBeenNthCalledWith(1, { removeRuleIds: [1] });
+    const addCall = (dnr.updateSessionRules as ReturnType<typeof vi.fn>).mock.calls[1][0] as {
+      addRules: Array<{
+        id: number;
+        action: { requestHeaders: Array<{ header: string; operation: string; value: string }> };
+        condition: { urlFilter: string; resourceTypes: string[] };
+      }>;
+    };
+    expect(addCall.addRules).toHaveLength(1);
+    const rule = addCall.addRules[0];
+    expect(rule.id).toBe(1);
+    expect(rule.condition.urlFilter).toBe('google.com');
+    const xgeo = rule.action.requestHeaders.find((h) => h.header === 'x-geo');
+    const al = rule.action.requestHeaders.find((h) => h.header === 'accept-language');
+    expect(xgeo?.value.startsWith('a ')).toBe(true);
+    expect(al?.value).toBe('en');
+    expect(cookiesApi.getAll).toHaveBeenCalledWith({ name: 'UULE' });
+    expect(cookiesApi.remove).toHaveBeenCalled();
+  });
+
+  it('传 null：只删规则 + 清 cookie，不 addRules', async () => {
+    const { dnr } = installDnrCookieMocks([]);
+    await applyGeo(null);
+    expect(dnr.updateSessionRules).toHaveBeenCalledTimes(1);
+    expect((dnr.updateSessionRules as ReturnType<typeof vi.fn>).mock.calls[0][0]).toEqual({
+      removeRuleIds: [1],
+    });
+  });
+
+  it('clearUuleCookies：domain 带前导点时拼出无点的合法 url', async () => {
+    const { cookiesApi } = installDnrCookieMocks([
+      { name: 'UULE', domain: '.google.com', path: '/' } as chrome.cookies.Cookie,
+    ]);
+    await applyGeo(null);
+    expect(cookiesApi.remove).toHaveBeenCalledWith({
+      name: 'UULE',
+      url: 'https://google.com/',
+    });
+  });
+});
+
+describe('geo pref storage', () => {
+  beforeEach(() => {
+    // setup.ts 的 beforeEach 已清空 storage；这里无需额外操作，显式留空表明隔离意图。
+  });
+
+  it('空 storage → 默认 US', async () => {
+    expect(await getGeoPref()).toEqual({ code: 'US' });
+  });
+
+  it('setGeoPref 后 getGeoPref 返回新值，且写入含 ts', async () => {
+    await setGeoPref('DE');
+    expect(await getGeoPref()).toEqual({ code: 'DE' });
+    const items = (await chrome.storage.local.get(GEO_STORAGE_KEY)) as Record<string, { code: string; ts: number }>;
+    expect(items[GEO_STORAGE_KEY].code).toBe('DE');
+    expect(typeof items[GEO_STORAGE_KEY].ts).toBe('number');
+  });
+
+  it('脏数据（无 code 字段）→ 回落默认 US', async () => {
+    await chrome.storage.local.set({ [GEO_STORAGE_KEY]: { foo: 'bar' } });
+    expect(await getGeoPref()).toEqual({ code: DEFAULT_GEO_CODE });
   });
 });

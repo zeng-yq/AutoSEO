@@ -47,3 +47,70 @@ export function resolveGeo(code: string | undefined): GeoRegion | null {
   if (!code || code === GEO_OFF) return null;
   return GEO_REGIONS.find((r) => r.code === code) ?? null;
 }
+
+const RULE_ID = 1;
+const ACCEPT_LANG = 'en';
+const GEO_HOST_FILTER = 'google.com';
+
+/** storage key（跟随关键词工具 kw-tools:* 命名惯例）。 */
+export const GEO_STORAGE_KEY = 'kw-tools:geo';
+
+interface GeoPref {
+  code: GeoCode;
+  ts: number;
+}
+
+/**
+ * 应用地理位置：先移除旧会话规则 + 清 UULE cookie，再写新规则。
+ * 传 null = 关闭（只清不加），恢复真实位置。
+ */
+export async function applyGeo(region: GeoRegion | null): Promise<void> {
+  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: [RULE_ID] });
+  await clearUuleCookies();
+  if (!region) return;
+  await chrome.declarativeNetRequest.updateSessionRules({
+    addRules: [
+      {
+        id: RULE_ID,
+        priority: 1,
+        action: {
+          type: 'modifyHeaders',
+          requestHeaders: [
+            { header: 'x-geo', operation: 'set', value: encodeXGeo(region.lat, region.lng) },
+            { header: 'accept-language', operation: 'set', value: ACCEPT_LANG },
+          ],
+        },
+        condition: {
+          urlFilter: GEO_HOST_FILTER,
+          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'image', 'ping'],
+        },
+      },
+    ],
+  });
+}
+
+/**
+ * 删 Google 回写的 UULE cookie。
+ * domain 可能带前导 '.'（如 .google.com），去掉才能拼合法 URL（gslocation 原版此处有隐患，修正）。
+ */
+async function clearUuleCookies(): Promise<void> {
+  const cookies = await chrome.cookies.getAll({ name: 'UULE' });
+  await Promise.all(
+    cookies.map((c) => {
+      const host = c.domain.replace(/^\./, '');
+      return chrome.cookies.remove({ name: 'UULE', url: `https://${host}${c.path}` });
+    }),
+  );
+}
+
+/** 读取位置偏好；空/脏 storage → 默认 US。 */
+export async function getGeoPref(): Promise<{ code: GeoCode }> {
+  const items = (await chrome.storage.local.get(GEO_STORAGE_KEY)) as Record<string, Partial<GeoPref> | undefined>;
+  const code = items[GEO_STORAGE_KEY]?.code;
+  return { code: code ?? DEFAULT_GEO_CODE };
+}
+
+/** 写入位置偏好（含时间戳）。 */
+export async function setGeoPref(code: GeoCode): Promise<void> {
+  await chrome.storage.local.set({ [GEO_STORAGE_KEY]: { code, ts: Date.now() } satisfies GeoPref });
+}
