@@ -28,7 +28,7 @@ import { buildBingUrl } from '../lib/bing/url';
 import { PROBES as BING_PROBES } from '../lib/bing/selectors';
 import { getSettings } from '../lib/storage/settings';
 import { GSC_PORT_NAME, BING_PORT_NAME } from '../lib/messaging/protocol';
-import type { GscRequest, GscEvent, BingRequest, BingEvent } from '../lib/messaging/types';
+import type { GscRequest, GscEvent, BingRequest, BingEvent, GeminiOpen } from '../lib/messaging/types';
 
 /**
  * GSC SPA 加载完成的等待超时。
@@ -67,6 +67,29 @@ const BING_LOGIN_CHECK_EXPR =
 export default defineBackground(() => {
   // 点击工具栏图标打开 sidepanel（MV3 sidePanel API）。失败静默：旧 Chrome 无此 API。
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+
+  /** content script 请求打开 Gemini 新标签。 */
+  chrome.runtime.onMessage.addListener((msg: GeminiOpen, _sender, sendResponse) => {
+    if (msg?.type === 'OPEN_GEMINI' && typeof msg.url === 'string') {
+      let url: URL;
+      try {
+        url = new URL(msg.url);
+      } catch {
+        sendResponse({ ok: false, error: 'invalid url' });
+        return true;
+      }
+      if (url.protocol !== 'https:' || url.hostname !== 'gemini.google.com') {
+        sendResponse({ ok: false, error: 'disallowed url' });
+        return true;
+      }
+      chrome.tabs
+        .create({ url: msg.url, active: true })
+        .then(() => sendResponse({ ok: true }))
+        .catch((err: Error) => sendResponse({ ok: false, error: err.message }));
+      return true;
+    }
+    return false;
+  });
 
   /** 取消标志；GSC_CANCEL 置 true，runBatch 下一条 URL 前自检。 */
   let stopRequested = false;

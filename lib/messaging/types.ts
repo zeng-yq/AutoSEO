@@ -109,3 +109,13 @@ export interface BingDone {
 }
 
 export type BingEvent = BingState | BingLog | BingDone;
+
+// ---------------------------------------------------------------------------
+// Content script -> background：打开 Gemini 提问链接。
+// ---------------------------------------------------------------------------
+
+/** 请求 background 打开 Gemini 新标签页。 */
+export interface GeminiOpen {
+  type: 'OPEN_GEMINI';
+  url: string;
+}
