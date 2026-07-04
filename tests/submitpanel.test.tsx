@@ -27,7 +27,8 @@ describe('SubmitPanel', () => {
     render(<SubmitPanel site={{ domain: 'example.com' }} onBack={() => {}} />);
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'https://example.com/es/' } });
     fireEvent.click(screen.getByText('一次提交'));
-    expect(run).toHaveBeenCalledWith({ gsc: true, bing: true }, 'example.com', ['https://example.com/es/']);
+    // T10 起 run 签名为 (platforms, domain, sitemapUrl)；sitemap 输入 UI 见 T11
+    expect(run).toHaveBeenCalledWith({ gsc: true, bing: true }, 'example.com', 'https://example.com/sitemap.xml');
   });
   it('返回按钮触发 onBack', () => {
     const onBack = vi.fn();

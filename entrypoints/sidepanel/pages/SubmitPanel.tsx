@@ -22,7 +22,9 @@ export default function SubmitPanel({ site, onBack }: { site: Site; onBack: () =
   function submit() {
     if (!isValidDomain(site.domain)) { setError('请先选择或填写有效网站（如 example.com）'); return; }
     setError('');
-    void orch.run({ gsc, bing }, site.domain.trim(), urls);
+    // T10 改签名：run(platforms, domain, sitemapUrl)；完整 sitemap 输入 UI 见 T11。
+    const sitemapUrl = `https://${site.domain.trim()}/sitemap.xml`;
+    void orch.run({ gsc, bing }, site.domain.trim(), sitemapUrl);
   }
 
   return (
