@@ -27,8 +27,9 @@ import { runBatch as bingRunBatch } from '../lib/bing/flow';
 import { buildBingUrl } from '../lib/bing/url';
 import { PROBES as BING_PROBES } from '../lib/bing/selectors';
 import { getSettings } from '../lib/storage/settings';
-import { GSC_PORT_NAME, BING_PORT_NAME } from '../lib/messaging/protocol';
-import type { GscRequest, GscEvent, BingRequest, BingEvent } from '../lib/messaging/types';
+import { GSC_PORT_NAME, BING_PORT_NAME, SITEMAP_PORT_NAME } from '../lib/messaging/protocol';
+import type { GscRequest, GscEvent, BingRequest, BingEvent, SitemapRequest, SitemapEvent } from '../lib/messaging/types';
+import { handleSitemapRequest } from '../lib/sitemap/handler';
 
 /**
  * GSC SPA 加载完成的等待超时。
@@ -98,6 +99,12 @@ export default defineBackground(() => {
         } else if (msg.type === 'BING_CANCEL') {
           bingStop = true;
         }
+      });
+    } else if (port.name === SITEMAP_PORT_NAME) {
+      port.onMessage.addListener(async (msg: SitemapRequest) => {
+        if (msg.type !== 'SITEMAP_FETCH') return;
+        const e: SitemapEvent = await handleSitemapRequest(msg);
+        emit(port, e);
       });
     }
   });
@@ -202,8 +209,8 @@ export default defineBackground(() => {
     }
   }
 
-  /** 经 port 推送一个 GscEvent / BingEvent；若 port 已断开则静默忽略。 */
-  function emit(port: chrome.runtime.Port, e: GscEvent | BingEvent): void {
+  /** 经 port 推送一个 GscEvent / BingEvent / SitemapEvent；若 port 已断开则静默忽略。 */
+  function emit(port: chrome.runtime.Port, e: GscEvent | BingEvent | SitemapEvent): void {
     try {
       port.postMessage(e);
     } catch {
