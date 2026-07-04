@@ -12,8 +12,14 @@ const COMPARE_PRESETS = ['gpts', 'chatgpt', 'ai', 'ai tools'];
 interface Props { keyword: string; }
 interface Last { date: string; compare: string; geo: string; }
 
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 };
-const fieldStyle: React.CSSProperties = { marginTop: 'var(--space-sm)' };
+const colLabelStyle: React.CSSProperties = { fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 };
+const rowLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--color-muted)',
+  width: 56,
+  flexShrink: 0,
+  paddingTop: 7,
+};
 
 export default function GoogleTrendsTool({ keyword }: Props) {
   const [date, setDate] = useState<string>('today 1-m');
@@ -42,29 +48,43 @@ export default function GoogleTrendsTool({ keyword }: Props) {
   }
 
   return (
-    <ToolPanel logo={<GoogleTrendsLogo size={18} />} title="Google Trends" subtitle="谷歌趋势">
-      <label style={labelStyle}>天数</label>
-      <Select
-        value={date}
-        options={TRENDS_DATE_RANGES.map((d) => ({ value: d.value, label: d.label }))}
-        onChange={(e) => { setDate(e.target.value); persist({ date: e.target.value }); }}
-      />
-      <label style={{ ...labelStyle, ...fieldStyle }}>对比词</label>
-      <Combobox
-        value={compare}
-        options={COMPARE_PRESETS}
-        placeholder="如 gpts，可留空"
-        onChange={(v) => { setCompare(v); persist({ compare: v }); }}
-      />
-      <label style={{ ...labelStyle, ...fieldStyle }}>地区</label>
-      <Select
-        value={geo}
-        options={TRENDS_GEOS.map((g) => ({ value: g.value, label: g.label }))}
-        onChange={(e) => { setGeo(e.target.value); persist({ geo: e.target.value }); }}
-      />
-      <Button onClick={open} disabled={!keyword.trim()} style={{ marginTop: 'var(--space-md)', width: '100%' }}>
-        搜索
-      </Button>
+    <ToolPanel
+      logo={<GoogleTrendsLogo size={18} />}
+      title="Google Trends"
+      subtitle="谷歌趋势"
+      action={<Button onClick={open} disabled={!keyword.trim()}>搜索</Button>}
+    >
+      {/* 对比词:标签 + Combobox 同行 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+        <span style={rowLabelStyle}>对比词</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Combobox
+            value={compare}
+            options={COMPARE_PRESETS}
+            placeholder="如 gpts,可留空"
+            onChange={(v) => { setCompare(v); persist({ compare: v }); }}
+          />
+        </div>
+      </div>
+      {/* 天数 + 地区:两列并排 */}
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={colLabelStyle}>天数</div>
+          <Select
+            value={date}
+            options={TRENDS_DATE_RANGES.map((d) => ({ value: d.value, label: d.label }))}
+            onChange={(e) => { setDate(e.target.value); persist({ date: e.target.value }); }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={colLabelStyle}>地区</div>
+          <Select
+            value={geo}
+            options={TRENDS_GEOS.map((g) => ({ value: g.value, label: g.label }))}
+            onChange={(e) => { setGeo(e.target.value); persist({ geo: e.target.value }); }}
+          />
+        </div>
+      </div>
     </ToolPanel>
   );
 }
