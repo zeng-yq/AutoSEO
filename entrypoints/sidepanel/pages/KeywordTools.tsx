@@ -25,10 +25,9 @@ export default function KeywordTools() {
 
   return (
     <div style={{ padding: 'var(--space-md)' }}>
-      <h2 style={{ fontSize: 17, marginBottom: 'var(--space-md)' }}>关键词工具</h2>
       <label style={labelStyle}>关键词</label>
       <TextInput value={keyword} placeholder="如 apple" onChange={(e) => onChange(e.target.value)} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', marginTop: 'var(--space-md)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
         <AhrefsTool keyword={keyword} />
         <GoogleTrendsTool keyword={keyword} />
         <QuickSearchTool keyword={keyword} />
