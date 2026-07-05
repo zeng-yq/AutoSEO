@@ -12,15 +12,14 @@ describe('KeywordTools', () => {
   it('渲染公共关键词输入与三张工具卡片', () => {
     render(<KeywordTools />);
     expect(screen.getByPlaceholderText('如 apple')).toBeInTheDocument();
-    // Ahrefs
-    expect(screen.getByText('Ahrefs')).toBeInTheDocument();
+    // 关键词难度
     expect(screen.getByText('Keyword Difficulty Checker')).toBeInTheDocument();
     // Google Trends
     expect(screen.getByText('Google Trends')).toBeInTheDocument();
     // 快捷搜索
     expect(screen.getByText('搜索引擎查询')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '用 Google 搜' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '用 Bing 搜' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '用 Yandex 搜' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Google 搜索' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bing 搜索' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Yandex 搜索' })).toBeInTheDocument();
   });
 });

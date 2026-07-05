@@ -1,4 +1,4 @@
-import ahrefsLogoUrl from '../assets/logos/keyword-difficulty-checker.svg';
+import ahrefsLogoUrl from '../assets/logos/keyword-difficulty-checker.webp';
 import googleTrendsLogoUrl from '../assets/logos/google-trends.png';
 import googleLogoUrl from '../assets/logos/google.png';
 import bingLogoUrl from '../assets/logos/bing.png';

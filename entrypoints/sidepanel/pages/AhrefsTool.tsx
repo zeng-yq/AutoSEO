@@ -40,8 +40,7 @@ export default function AhrefsTool({ keyword }: Props) {
   return (
     <ToolPanel
       logo={<AhrefsLogo size={18} />}
-      title="Ahrefs"
-      subtitle="Keyword Difficulty Checker"
+      title="Keyword Difficulty Checker"
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
         <Select

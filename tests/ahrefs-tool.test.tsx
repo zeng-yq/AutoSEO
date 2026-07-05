@@ -5,9 +5,8 @@ import AhrefsTool from '../entrypoints/sidepanel/pages/AhrefsTool';
 afterEach(() => { vi.restoreAllMocks(); });
 
 describe('AhrefsTool', () => {
-  it('渲染标题与英文副标题,关键词非空时按钮可用', () => {
+  it('渲染标题,关键词非空时按钮可用', () => {
     render(<AhrefsTool keyword="apple" />);
-    expect(screen.getByText('Ahrefs')).toBeInTheDocument();
     expect(screen.getByText('Keyword Difficulty Checker')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '查询' })).toBeEnabled();
   });

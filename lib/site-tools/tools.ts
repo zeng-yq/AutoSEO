@@ -1,5 +1,5 @@
-import backlinkLogo from '../../entrypoints/sidepanel/assets/logos/backlink-checker.svg';
-import authorityLogo from '../../entrypoints/sidepanel/assets/logos/website-authority-checker.svg';
+import backlinkLogo from '../../entrypoints/sidepanel/assets/logos/backlink-checker.webp';
+import authorityLogo from '../../entrypoints/sidepanel/assets/logos/website-authority-checker.webp';
 import gscLogo from '../../entrypoints/sidepanel/assets/logos/google-search-console.png';
 import gaLogo from '../../entrypoints/sidepanel/assets/logos/google-analytics.svg';
 import clarityLogo from '../../entrypoints/sidepanel/assets/logos/clarity.svg';
