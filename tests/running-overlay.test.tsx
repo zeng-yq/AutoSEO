@@ -25,8 +25,13 @@ describe('RunningOverlay', () => {
 
   it('未勾选平台的步骤不渲染', () => {
     render(<RunningOverlay orch={mkOrch({ active: 'bing', bing: { state: { running: true, total: 10, done: 3 }, logs: [], results: [] } })} gscSelected={false} bingSelected onCancel={() => {}} />);
-    expect(screen.queryByText('GSC')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^GSC\b/)).not.toBeInTheDocument();
     expect(screen.getByText(/提交中 Bing 3\/10/)).toBeInTheDocument();
+  });
+
+  it('勾选且为当前平台时 GSC 步骤渲染', () => {
+    render(<RunningOverlay orch={mkOrch({ active: 'gsc' })} gscSelected bingSelected onCancel={() => {}} />);
+    expect(screen.getByText(/^GSC\b/)).toBeInTheDocument();
   });
 
   it('合并三路日志并渲染消息', () => {
