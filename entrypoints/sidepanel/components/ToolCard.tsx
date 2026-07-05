@@ -1,14 +1,15 @@
 import { IconChevron } from './icons';
 
 export interface ToolCardProps {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
+  logo?: string;
   title: string;
   subtitle?: string;
   onClick?: () => void;
   disabled?: boolean;
 }
 
-export default function ToolCard({ icon, title, subtitle, onClick, disabled }: ToolCardProps) {
+export default function ToolCard({ icon, logo, title, subtitle, onClick, disabled }: ToolCardProps) {
   const interactive = !!onClick && !disabled;
   return (
     <div
@@ -20,7 +21,11 @@ export default function ToolCard({ icon, title, subtitle, onClick, disabled }: T
       className={`tool-card${disabled ? ' is-disabled' : ''}`}
       style={{ opacity: disabled ? 0.5 : 1 }}
     >
-      <span className="tool-card__icon">{icon}</span>
+      <span className="tool-card__icon">
+        {logo
+          ? <img src={logo} width={24} height={24} alt="" aria-hidden="true" style={{ objectFit: 'contain', borderRadius: 4 }} />
+          : icon}
+      </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span className="tool-card__title">{title}</span>
         {subtitle && <span className="tool-card__subtitle">{subtitle}</span>}
