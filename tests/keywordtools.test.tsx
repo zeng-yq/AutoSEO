@@ -14,7 +14,7 @@ describe('KeywordTools', () => {
     expect(screen.getByPlaceholderText('如 apple')).toBeInTheDocument();
     // Ahrefs
     expect(screen.getByText('Ahrefs')).toBeInTheDocument();
-    expect(screen.getByText('关键词难度查询')).toBeInTheDocument();
+    expect(screen.getByText('Keyword Difficulty Checker')).toBeInTheDocument();
     // Google Trends
     expect(screen.getByText('Google Trends')).toBeInTheDocument();
     expect(screen.getByText('谷歌趋势')).toBeInTheDocument();
