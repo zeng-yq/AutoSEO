@@ -5,6 +5,7 @@ import RunningOverlay from '../components/RunningOverlay';
 import BatchReportCard from '../components/BatchReportCard';
 import SubmitBar from '../components/SubmitBar';
 import IndexNowKeySection from '../components/IndexNowKeySection';
+import GscCredentialsSection from '../components/GscCredentialsSection';
 import { IconBack } from '../components/icons';
 import { useSubmitOrchestrator } from '../hooks/useSubmitOrchestrator';
 import { isValidDomain } from '@lib/storage/projects';
@@ -60,6 +61,7 @@ export default function SubmitPanel({ site, onBack }: { site: Site; onBack: () =
           </div>
 
           <IndexNowKeySection />
+          <GscCredentialsSection />
 
           {showReport && (
             <div style={{ marginTop: 'var(--space-md)' }}>

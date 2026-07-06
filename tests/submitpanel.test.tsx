@@ -25,6 +25,10 @@ vi.mock('../entrypoints/sidepanel/components/IndexNowKeySection', () => ({
   default: () => null,
 }));
 
+vi.mock('../entrypoints/sidepanel/components/GscCredentialsSection', () => ({
+  default: () => null,
+}));
+
 import SubmitPanel from '../entrypoints/sidepanel/pages/SubmitPanel';
 
 beforeEach(() => {
