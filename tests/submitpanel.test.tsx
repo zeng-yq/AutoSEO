@@ -21,6 +21,10 @@ vi.mock('../entrypoints/sidepanel/hooks/useProgressQuery', () => ({
   useProgressQuery: () => ({ state: { loading: false }, refresh }),
 }));
 
+vi.mock('../entrypoints/sidepanel/components/IndexNowKeySection', () => ({
+  default: () => null,
+}));
+
 import SubmitPanel from '../entrypoints/sidepanel/pages/SubmitPanel';
 
 beforeEach(() => {

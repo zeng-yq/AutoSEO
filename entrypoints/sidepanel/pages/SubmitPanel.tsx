@@ -4,6 +4,7 @@ import ProgressDashboard from '../components/ProgressDashboard';
 import RunningOverlay from '../components/RunningOverlay';
 import BatchReportCard from '../components/BatchReportCard';
 import SubmitBar from '../components/SubmitBar';
+import IndexNowKeySection from '../components/IndexNowKeySection';
 import { IconBack } from '../components/icons';
 import { useSubmitOrchestrator } from '../hooks/useSubmitOrchestrator';
 import { isValidDomain } from '@lib/storage/projects';
@@ -57,6 +58,8 @@ export default function SubmitPanel({ site, onBack }: { site: Site; onBack: () =
           <div style={{ fontSize: 11, color: 'var(--color-muted)', marginTop: 4 }}>
             将自动过滤登录 / 注册 / 隐私 / 条款 / 账号等低价值链接，不参与提交。
           </div>
+
+          <IndexNowKeySection />
 
           {showReport && (
             <div style={{ marginTop: 'var(--space-md)' }}>
