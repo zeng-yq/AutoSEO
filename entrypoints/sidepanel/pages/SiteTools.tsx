@@ -34,7 +34,7 @@ export default function SiteTools() {
 
   function handleSiteBlur() {
     const n = normalizeDomain(site.domain);
-    if (n !== site.domain) setSite({ domain: n });
+    if (n && n !== site.domain) setSite({ domain: n });
   }
 
   function openTool(buildUrl: (domain: string) => string) {

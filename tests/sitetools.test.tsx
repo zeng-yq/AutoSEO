@@ -120,4 +120,15 @@ describe('SiteTools', () => {
     await flush();
     expect(screen.getByText('请输入有效域名，如 example.com')).toBeInTheDocument();
   });
+  it('非 ASCII 输入失焦不清空，仍显示校验提示', async () => {
+    render(<SiteTools />);
+    await flush();
+    const input = screen.getByPlaceholderText('example.com') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '例子.中国' } });
+    fireEvent.blur(input);
+    // normalizeDomain 返回 ''，但输入框不应被清空
+    expect((screen.getByPlaceholderText('example.com') as HTMLInputElement).value).toBe('例子.中国');
+    await flush();
+    expect(screen.getByText('请输入有效域名，如 example.com')).toBeInTheDocument();
+  });
 });

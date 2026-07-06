@@ -37,4 +37,12 @@ describe('ProjectModal', () => {
     expect(screen.getByText('请输入有效域名，如 example.com')).toBeInTheDocument();
     expect(screen.getByText('添加')).toBeDisabled();
   });
+  it('非 ASCII 输入失焦不清空，仍显示校验提示', async () => {
+    render(<ProjectModal onClose={() => {}} />);
+    const input = screen.getByPlaceholderText('example.com') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '例子.中国' } });
+    fireEvent.blur(input);
+    expect(input.value).toBe('例子.中国');
+    expect(screen.getByText('请输入有效域名，如 example.com')).toBeInTheDocument();
+  });
 });

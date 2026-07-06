@@ -14,7 +14,7 @@ export default function ProjectModal({ onClose }: { onClose: () => void }) {
 
   function handleBlur() {
     const n = normalizeDomain(domain);
-    if (n !== domain) setDomain(n);
+    if (n && n !== domain) setDomain(n);
   }
 
   useEffect(() => {
