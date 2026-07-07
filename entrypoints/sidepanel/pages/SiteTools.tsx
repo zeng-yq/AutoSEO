@@ -7,7 +7,7 @@ import SubmitPanel from './SubmitPanel';
 import { IconSubmit, IconRobots, IconSitemap, IconBolt, IconGlobe, IconChart, IconRefresh } from '../components/icons';
 import { useSite } from '../hooks/useSite';
 import { useProjects } from '../hooks/useProjects';
-import { isValidDomain, normalizeDomain } from '@lib/storage/projects';
+import { isValidDomain, normalizeDomain, sanitizeDomainInput } from '@lib/storage/projects';
 import { SITE_TOOLS, SITE_TOOL_GROUPS, type SiteToolCategory } from '@lib/site-tools/tools';
 
 // 分类 → header icon(与关键词面板每个 ToolPanel 的「icon + 标题」一致)
@@ -37,9 +37,8 @@ export default function SiteTools() {
     if (n && n !== site.domain) setSite({ domain: n });
   }
 
-  function openTool(buildUrl: (domain: string) => string) {
-    if (!hasSite) return;
-    try { chrome.tabs.create({ url: buildUrl(site.domain) }); }
+  function openTool(buildUrl: (domain: string | null) => string) {
+    try { chrome.tabs.create({ url: buildUrl(hasSite ? site.domain : null) }); }
     catch { /* tabs.create 失败静默(扩展上下文异常等,不阻塞 UI) */ }
   }
 
@@ -51,7 +50,7 @@ export default function SiteTools() {
   return (
     <div style={{ padding: 'var(--space-md)' }}>
       <label style={{ display: 'block', fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>网站</label>
-      <Combobox value={site.domain} options={domains} placeholder="example.com" onChange={(v) => setSite({ domain: v })} onBlur={handleSiteBlur} onManage={() => setModalOpen(true)} />
+      <Combobox value={site.domain} options={domains} placeholder="example.com" sanitize={sanitizeDomainInput} onChange={(v) => setSite({ domain: v })} onBlur={handleSiteBlur} onManage={() => setModalOpen(true)} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
         {/* 自动化工具:网站提交进入 SubmitPanel(置顶) */}
@@ -69,17 +68,20 @@ export default function SiteTools() {
         {SITE_TOOL_GROUPS.map((g) => (
           <ToolPanel key={g.id} logo={CATEGORY_ICON[g.id]} title={g.label}>
             <div style={gridStyle}>
-              {SITE_TOOLS.filter((t) => t.category === g.id).map((t) => (
-                <ToolCard
-                  key={t.id}
-                  icon={toolIcon(t)}
-                  logo={t.logo}
-                  title={t.name}
-                  onClick={hasSite ? () => openTool(t.buildUrl) : undefined}
-                  disabled={!hasSite}
-                  style={t.fullWidth ? { gridColumn: '1 / -1' } : undefined}
-                />
-              ))}
+              {SITE_TOOLS.filter((t) => t.category === g.id).map((t) => {
+                const disabled = t.requiresDomain === true && !hasSite;
+                return (
+                  <ToolCard
+                    key={t.id}
+                    icon={toolIcon(t)}
+                    logo={t.logo}
+                    title={t.name}
+                    onClick={!disabled ? () => openTool(t.buildUrl) : undefined}
+                    disabled={disabled}
+                    style={t.fullWidth ? { gridColumn: '1 / -1' } : undefined}
+                  />
+                );
+              })}
             </div>
           </ToolPanel>
         ))}
@@ -87,7 +89,7 @@ export default function SiteTools() {
 
       {!hasSite && (
         <div style={{ color: showInvalid ? 'var(--color-error)' : 'var(--color-muted)', fontSize: 12, marginTop: 'var(--space-sm)' }}>
-          {showInvalid ? '请输入有效域名，如 example.com' : '请先选择或填写网站以使用工具'}
+          {showInvalid ? '请输入有效域名，如 example.com' : '填写网站可额外查询 robots.txt / sitemap.xml'}
         </div>
       )}
 

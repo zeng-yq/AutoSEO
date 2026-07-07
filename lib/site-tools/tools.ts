@@ -19,8 +19,10 @@ export interface SiteTool {
   logo?: string;
   /** SVG icon 标记(robots/sitemap 用,与 logo 二选一)。 */
   icon?: 'robots' | 'sitemap';
-  /** 由当前 site.domain 构造打开 url。 */
-  buildUrl: (domain: string) => string;
+  /** 构造打开 url;domain 为 null 表示当前无网站(仅 requiresDomain 未设/为 false 的工具会被这样调用)。 */
+  buildUrl: (domain: string | null) => string;
+  /** true = 必须有有效网站才能使用(无网站时禁用);缺省 false = 始终可点击。 */
+  requiresDomain?: boolean;
   /** 标题较长,在两列网格里会折行,标记后在网格中独占整行。 */
   fullWidth?: boolean;
 }
@@ -33,10 +35,10 @@ export const SITE_TOOL_GROUPS: { id: SiteToolCategory; label: string }[] = [
 ];
 
 export const SITE_TOOLS: SiteTool[] = [
-  { id: 'robots', name: 'robots.txt', category: 'quick', icon: 'robots', buildUrl: (d) => buildSeoFileUrl(d, 'robots.txt') },
-  { id: 'sitemap', name: 'sitemap.xml', category: 'quick', icon: 'sitemap', buildUrl: (d) => buildSeoFileUrl(d, 'sitemap.xml') },
-  { id: 'backlink-checker', name: 'Backlink Checker', category: 'quick', logo: backlinkLogo, buildUrl: buildBacklinkCheckerUrl, fullWidth: true },
-  { id: 'authority-checker', name: 'Website Authority Checker', category: 'quick', logo: authorityLogo, buildUrl: buildWebsiteAuthorityCheckerUrl, fullWidth: true },
+  { id: 'robots', name: 'robots.txt', category: 'quick', icon: 'robots', requiresDomain: true, buildUrl: (d) => buildSeoFileUrl(d!, 'robots.txt') },
+  { id: 'sitemap', name: 'sitemap.xml', category: 'quick', icon: 'sitemap', requiresDomain: true, buildUrl: (d) => buildSeoFileUrl(d!, 'sitemap.xml') },
+  { id: 'backlink-checker', name: 'Backlink Checker', category: 'quick', logo: backlinkLogo, buildUrl: (d) => (d ? buildBacklinkCheckerUrl(d) : 'https://ahrefs.com/backlink-checker'), fullWidth: true },
+  { id: 'authority-checker', name: 'Website Authority Checker', category: 'quick', logo: authorityLogo, buildUrl: (d) => (d ? buildWebsiteAuthorityCheckerUrl(d) : 'https://ahrefs.com/website-authority-checker'), fullWidth: true },
   { id: 'gsc', name: 'GSC', category: 'webmaster', logo: gscLogo, buildUrl: () => 'https://search.google.com/search-console' },
   { id: 'bing-webmaster', name: 'Bing', category: 'webmaster', logo: bingLogo, buildUrl: () => 'https://www.bing.com/webmasters' },
   { id: 'ga', name: 'Google Analytics', category: 'analytics', logo: gaLogo, buildUrl: () => 'https://analytics.google.com/analytics/web' },

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeDomain, isValidDomain } from '../lib/storage/projects';
+import { normalizeDomain, isValidDomain, sanitizeDomainInput } from '../lib/storage/projects';
 
 describe('normalizeDomain', () => {
   it('剥离 scheme / path / query / fragment', () => {
@@ -42,5 +42,25 @@ describe('isValidDomain(normalizeDomain(x)) 组合', () => {
     expect(valid('192.168.1.1')).toBe(false); // 末段非 [a-z]{2,}
     expect(valid('例子.中国')).toBe(false);
     expect(valid('')).toBe(false);
+  });
+});
+
+describe('sanitizeDomainInput', () => {
+  it('实时剥掉 scheme / path / query，仅保留主机名', () => {
+    expect(sanitizeDomainInput('https://example.com/path?q=1')).toBe('example.com');
+    expect(sanitizeDomainInput('http://www.example.com/')).toBe('www.example.com');
+  });
+  it('已是裸域名则原样返回', () => {
+    expect(sanitizeDomainInput('example.com')).toBe('example.com');
+  });
+  it('未成形输入保留原文，不打断逐字输入', () => {
+    expect(sanitizeDomainInput('exa')).toBe('exa');
+    expect(sanitizeDomainInput('http://')).toBe('http://');
+  });
+  it('空输入保留空串', () => {
+    expect(sanitizeDomainInput('')).toBe('');
+  });
+  it('非 ASCII 输入保留原文（normalizeDomain 不支持 IDN）', () => {
+    expect(sanitizeDomainInput('例子.中国')).toBe('例子.中国');
   });
 });

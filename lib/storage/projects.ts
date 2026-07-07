@@ -23,6 +23,19 @@ export function normalizeDomain(input: string): string {
   }
 }
 
+/**
+ * 输入过程中的实时域名清洗：剥掉 scheme / path / query / fragment / 端口等，
+ * 仅保留主机名（小写）。与 normalizeDomain 的区别：当输入未成形（如逐字输入
+ * 的中间态、非 ASCII、解析失败）时保留原文而非返回空串，避免打断用户输入。
+ * 空输入返回原值，让用户能正常清空输入框。
+ */
+export function sanitizeDomainInput(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return raw;        // 空输入保留原值
+  const n = normalizeDomain(raw);
+  return n || raw;                 // normalize 失败 → 保留原文
+}
+
 export async function getProjects(): Promise<Project[]> {
   const items = await chrome.storage.local.get(KEY);
   return (items[KEY] as Project[] | undefined) ?? [];

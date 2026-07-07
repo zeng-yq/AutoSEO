@@ -8,9 +8,11 @@ export interface ComboboxProps {
   onManage?: () => void;
   onBlur?: () => void;
   placeholder?: string;
+  /** 输入时实时清洗(如剥掉协议头/路径仅保留域名);返回值同时回写 input 与 onChange。 */
+  sanitize?: (value: string) => string;
 }
 
-export default function Combobox({ value, options, onChange, onManage, onBlur, placeholder }: ComboboxProps) {
+export default function Combobox({ value, options, onChange, onManage, onBlur, placeholder, sanitize }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   // 内部 query 状态用于过滤建议；外部受控 value 仍用于回填输入框。
   // 这样即便父组件暂时未回写 value，输入当下的文本也能立即过滤下拉项。
@@ -28,7 +30,7 @@ export default function Combobox({ value, options, onChange, onManage, onBlur, p
         <input
           value={value}
           placeholder={placeholder}
-          onChange={(e) => { onChange(e.target.value); setQuery(e.target.value); setOpen(true); }}
+          onChange={(e) => { const v = sanitize ? sanitize(e.target.value) : e.target.value; onChange(v); setQuery(v); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onBlur={() => { onBlur?.(); setTimeout(() => setOpen(false), 120); }}
           style={{

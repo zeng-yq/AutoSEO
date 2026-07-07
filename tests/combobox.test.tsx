@@ -33,4 +33,18 @@ describe('Combobox', () => {
     fireEvent.blur(input);
     expect(onBlur).toHaveBeenCalledOnce();
   });
+  it('传入 sanitize 时对输入实时清洗后回调', () => {
+    const onChange = vi.fn();
+    const { container } = render(<Combobox value="" options={[]} onChange={onChange} sanitize={(v) => v.toUpperCase()} />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'abc' } });
+    expect(onChange).toHaveBeenCalledWith('ABC');
+  });
+  it('未传 sanitize 时原文透传', () => {
+    const onChange = vi.fn();
+    const { container } = render(<Combobox value="" options={[]} onChange={onChange} />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'abc' } });
+    expect(onChange).toHaveBeenCalledWith('abc');
+  });
 });

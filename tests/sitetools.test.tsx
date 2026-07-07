@@ -43,6 +43,12 @@ describe('SiteTools', () => {
     const robots = screen.getByText('robots.txt').closest('[role="button"], .tool-card');
     expect(robots?.getAttribute('aria-disabled')).toBe('true');
   });
+  it('未选网站时 sitemap.xml 同样禁用', async () => {
+    render(<SiteTools />);
+    await flush();
+    const sitemap = screen.getByText('sitemap.xml').closest('[role="button"], .tool-card');
+    expect(sitemap?.getAttribute('aria-disabled')).toBe('true');
+  });
   it('渲染 7 个新增工具卡片', async () => {
     render(<SiteTools />);
     await flush();
@@ -77,11 +83,39 @@ describe('SiteTools', () => {
     expect(spy.mock.calls[0][0].url).toBe('https://search.google.com/search-console');
     spy.mockRestore();
   });
-  it('未选网站时 PageSpeed Insights 禁用', async () => {
+  it('未选网站时 PageSpeed Insights 可点击并跳首页（不依赖域名）', async () => {
+    const spy = vi.spyOn(chrome.tabs, 'create').mockResolvedValue({ id: 1 } as never);
     render(<SiteTools />);
     await flush();
     const card = screen.getByText('PageSpeed Insights').closest('[role="button"], .tool-card');
-    expect(card?.getAttribute('aria-disabled')).toBe('true');
+    expect(card?.getAttribute('aria-disabled')).not.toBe('true');
+    fireEvent.click(screen.getByText('PageSpeed Insights'));
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].url).toBe('https://pagespeed.web.dev/');
+    spy.mockRestore();
+  });
+  it('未选网站时 Backlink Checker 可点击并跳工具首页（不带域名）', async () => {
+    const spy = vi.spyOn(chrome.tabs, 'create').mockResolvedValue({ id: 1 } as never);
+    render(<SiteTools />);
+    await flush();
+    const card = screen.getByText('Backlink Checker').closest('[role="button"], .tool-card');
+    expect(card?.getAttribute('aria-disabled')).not.toBe('true');
+    fireEvent.click(screen.getByText('Backlink Checker'));
+    expect(spy.mock.calls[0][0].url).toBe('https://ahrefs.com/backlink-checker');
+    spy.mockRestore();
+  });
+  it('未选网站时 GSC 可点击并跳入口（不带域名）', async () => {
+    const spy = vi.spyOn(chrome.tabs, 'create').mockResolvedValue({ id: 1 } as never);
+    render(<SiteTools />);
+    await flush();
+    fireEvent.click(screen.getByText('GSC'));
+    expect(spy.mock.calls[0][0].url).toBe('https://search.google.com/search-console');
+    spy.mockRestore();
+  });
+  it('未选网站时显示轻量引导文案（而非全量禁用提示）', async () => {
+    render(<SiteTools />);
+    await flush();
+    expect(screen.getByText('填写网站可额外查询 robots.txt / sitemap.xml')).toBeInTheDocument();
   });
   it('选网站后点 Bing 打开直接链接', async () => {
     const spy = vi.spyOn(chrome.tabs, 'create').mockResolvedValue({ id: 1 } as never);
@@ -94,19 +128,17 @@ describe('SiteTools', () => {
     expect(spy.mock.calls[0][0].url).toBe('https://www.bing.com/webmasters');
     spy.mockRestore();
   });
-  it('脏域名 change 后即启用按钮（hasSite 前置 normalize），失焦后清洗回填', async () => {
+  it('脏域名 change 时实时清洗为裸域名（无需失焦）', async () => {
     const createSpy = vi.spyOn(chrome.tabs, 'create').mockResolvedValue({ id: 1 } as never);
     render(<SiteTools />);
     await flush();
     const input = screen.getByPlaceholderText('example.com') as HTMLInputElement;
-    // 输入脏值（未失焦）
+    // 输入完整 URL,change 时即实时清洗为裸域名(无需失焦)
     fireEvent.change(input, { target: { value: 'https://example.com/path' } });
-    // change 后即启用：hasSite = isValidDomain(normalizeDomain(...))
+    expect(input.value).toBe('example.com');
+    // 清洗后即启用 robots
     const robots = screen.getByText('robots.txt').closest('[role="button"], .tool-card');
     expect(robots?.getAttribute('aria-disabled')).not.toBe('true');
-    // 失焦后回填清洗值
-    fireEvent.blur(input);
-    expect((screen.getByPlaceholderText('example.com') as HTMLInputElement).value).toBe('example.com');
     // 点击使用清洗后的域名
     fireEvent.click(screen.getByText('robots.txt'));
     expect(createSpy.mock.calls[0][0].url).toBe('https://example.com/robots.txt');
