@@ -17,8 +17,17 @@ import SiteTools from '../entrypoints/sidepanel/pages/SiteTools';
 const flush = () => act(async () => {});
 
 describe('SiteTools', () => {
-  it('点击「网站提交」进入提交子面板（出现返回）', async () => {
+  it('未选网站时「网站提交」禁用', async () => {
     render(<SiteTools />);
+    await flush();
+    const submit = screen.getByText(/网站提交/).closest('[role="button"], .tool-card');
+    expect(submit?.getAttribute('aria-disabled')).toBe('true');
+  });
+  it('选择网站后点击「网站提交」进入提交子面板（出现返回）', async () => {
+    render(<SiteTools />);
+    await flush();
+    const input = screen.getByPlaceholderText('example.com') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'example.com' } });
     fireEvent.click(screen.getByText(/网站提交/));
     expect(await screen.findByText('返回')).toBeInTheDocument();
   });

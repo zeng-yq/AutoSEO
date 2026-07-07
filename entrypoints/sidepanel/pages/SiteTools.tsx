@@ -59,7 +59,8 @@ export default function SiteTools() {
             <ToolCard
               icon={<IconSubmit />}
               title="网站提交（GSC · Bing）"
-              onClick={() => setView('submit')}
+              onClick={hasSite ? () => setView('submit') : undefined}
+              disabled={!hasSite}
               style={{ gridColumn: '1 / -1' }}
             />
           </div>
