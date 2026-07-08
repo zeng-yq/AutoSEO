@@ -13,6 +13,7 @@ interface Ranking {
 const RANKINGS: Ranking[] = [
   { id: 'producthunt', name: 'Product Hunt', desc: '每日新产品 / 工具榜单', url: 'https://www.producthunt.com', icon: <IconTrophy /> },
   { id: 'stripe-traffic', name: 'Stripe 流量榜', desc: '外链来源排行', url: 'https://seo.box/referring/', icon: <IconLink /> },
+  { id: 'arrfounder', name: 'Arrfounder', desc: '产品 ARR 收入榜', url: 'https://arrfounder.com/?tab=products', icon: <IconTrophy /> },
 ];
 
 export default function Rankings() {
