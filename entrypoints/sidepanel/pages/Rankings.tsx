@@ -23,7 +23,7 @@ const RANKINGS: Ranking[] = [
   { id: 'indiepage', name: 'IndiePage', desc: '独立开发者收入榜', url: 'https://indiepa.ge/leaderboard', logo: indiepageLogo, icon: <IconTrophy /> },
   { id: 'trustmrr', name: 'TrustMRR', desc: 'SaaS 项目 MRR 榜', url: 'https://trustmrr.com/', logo: trustmrrLogo, icon: <IconTrophy /> },
   { id: 'traffic-cv', name: 'Traffic.cv', desc: '网站流量排行榜', url: 'https://traffic.cv/leaderboard/traffic', logo: trafficCvLogo, icon: <IconTrophy /> },
-  { id: 'starter-story', name: 'Starter Story', desc: '创业项目收入数据库', url: 'https://www.starterstory.com/data', logo: starterStoryLogo, icon: <IconTrophy /> },
+  { id: 'starter-story', name: 'Starter Story', desc: '创业项目数据库', url: 'https://www.starterstory.com/data', logo: starterStoryLogo, icon: <IconTrophy /> },
 ];
 
 export default function Rankings() {
