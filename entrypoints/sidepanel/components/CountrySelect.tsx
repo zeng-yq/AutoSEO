@@ -58,7 +58,7 @@ export default function CountrySelect({
   }, [value, editing, allowFreeText, allOptions]);
 
   const q = text.trim().toLowerCase();
-  const suggestions = (q ? allOptions.filter((o) => matchOption(o, q)) : allOptions).slice(0, 12);
+  const suggestions = q ? allOptions.filter((o) => matchOption(o, q)) : allOptions;
   const showList = open && suggestions.length > 0;
 
   function pick(o: CountryOption) {
@@ -123,12 +123,17 @@ export default function CountrySelect({
         onBlur={commit}
         onKeyDown={onKeyDown}
         style={{
-          width: '100%', height: 32, padding: '0 10px',
+          width: '100%', height: 32, padding: '0 28px 0 10px',
           background: 'var(--color-canvas)', color: 'var(--color-ink)',
           border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-md)',
           fontSize: 13, outline: 'none',
         }}
       />
+      {/* 下拉箭头:纯视觉提示,点击穿透到 input 触发聚焦展开 */}
+      <span aria-hidden="true" style={{
+        position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+        pointerEvents: 'none', color: 'var(--color-muted)', fontSize: 10, lineHeight: 1,
+      }}>▾</span>
       {showList && (
         <div style={{
           position: 'absolute', top: 34, left: 0, right: 0, zIndex: 10,
