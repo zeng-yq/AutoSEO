@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { IconSettings } from './icons';
 
 export interface ComboboxProps {
   value: string;
@@ -60,12 +59,12 @@ export default function Combobox({ value, options, onChange, onManage, onBlur, p
         )}
       </div>
       {onManage && (
-        <button type="button" aria-label="项目管理" onClick={onManage} style={{
-          flexShrink: 0, width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        <button type="button" onClick={onManage} style={{
+          flexShrink: 0, height: 32, padding: '0 10px', whiteSpace: 'nowrap',
           background: 'var(--color-canvas)', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-md)',
-          color: 'var(--color-muted)', cursor: 'pointer', lineHeight: 0,
+          color: 'var(--color-ink)', cursor: 'pointer', fontSize: 12,
         }}>
-          <IconSettings size={16} />
+          网站管理
         </button>
       )}
     </div>

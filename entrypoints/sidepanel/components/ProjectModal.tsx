@@ -37,12 +37,13 @@ export default function ProjectModal({ onClose }: { onClose: () => void }) {
         width: 'min(360px, 92vw)', background: 'var(--color-canvas)',
         borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-hairline)', padding: 16,
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ fontSize: 16 }}>项目管理</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <h2 style={{ fontSize: 16 }}>网站管理</h2>
           <button type="button" onClick={onClose} aria-label="关闭" style={{ border: 'none', background: 'none', color: 'var(--color-muted)', cursor: 'pointer', lineHeight: 0, padding: 4 }}>
             <IconClose size={16} />
           </button>
         </div>
+        <div style={{ color: 'var(--color-muted)', fontSize: 12, marginBottom: 12 }}>保存常用网址，避免每次重复输入。</div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <TextInput value={domain} placeholder="example.com" onChange={(e) => setDomain(e.target.value)} onBlur={handleBlur} onKeyDown={(e) => { if (e.key === 'Enter' && valid) submit(); }} />
@@ -58,7 +59,7 @@ export default function ProjectModal({ onClose }: { onClose: () => void }) {
               <button type="button" aria-label={`删除 ${p.domain}`} onClick={() => remove(p.id).catch((e) => setError((e as Error).message ?? String(e)))} style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', fontSize: 12 }}>删除</button>
             </div>
           ))}
-          {projects.length === 0 && <div style={{ color: 'var(--color-muted)', fontSize: 12 }}>还没有项目</div>}
+          {projects.length === 0 && <div style={{ color: 'var(--color-muted)', fontSize: 12 }}>还没有保存的网址</div>}
         </div>
       </div>
     </div>

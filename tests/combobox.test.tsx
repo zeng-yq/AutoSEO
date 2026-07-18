@@ -20,10 +20,10 @@ describe('Combobox', () => {
     fireEvent.mouseDown(screen.getByText('example.com'));
     expect(onChange).toHaveBeenCalledWith('example.com');
   });
-  it('齿轮按钮触发 onManage', () => {
+  it('网站管理按钮触发 onManage', () => {
     const onManage = vi.fn();
     render(<Combobox value="" options={[]} onChange={() => {}} onManage={onManage} />);
-    fireEvent.click(screen.getByLabelText('项目管理'));
+    fireEvent.click(screen.getByRole('button', { name: '网站管理' }));
     expect(onManage).toHaveBeenCalledOnce();
   });
   it('失焦触发 onBlur', () => {
