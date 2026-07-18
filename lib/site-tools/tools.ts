@@ -5,6 +5,8 @@ import bingLogo from '../../entrypoints/sidepanel/assets/logos/bing.png';
 import gaLogo from '../../entrypoints/sidepanel/assets/logos/google-analytics.svg';
 import clarityLogo from '../../entrypoints/sidepanel/assets/logos/clarity.svg';
 import pagespeedLogo from '../../entrypoints/sidepanel/assets/logos/pagespeed.svg';
+import webArchiveLogo from '../../entrypoints/sidepanel/assets/logos/web-archive.png';
+import seoWebCafeLogo from '../../entrypoints/sidepanel/assets/logos/seo-web-cafe.svg';
 import { buildSeoFileUrl } from '../seo-files/url';
 import { buildBacklinkCheckerUrl, buildWebsiteAuthorityCheckerUrl } from './url';
 
@@ -39,6 +41,8 @@ export const SITE_TOOLS: SiteTool[] = [
   { id: 'sitemap', name: 'sitemap.xml', category: 'quick', icon: 'sitemap', requiresDomain: true, buildUrl: (d) => buildSeoFileUrl(d!, 'sitemap.xml') },
   { id: 'backlink-checker', name: 'Backlink Checker', category: 'quick', logo: backlinkLogo, buildUrl: (d) => (d ? buildBacklinkCheckerUrl(d) : 'https://ahrefs.com/backlink-checker'), fullWidth: true },
   { id: 'authority-checker', name: 'Website Authority Checker', category: 'quick', logo: authorityLogo, buildUrl: (d) => (d ? buildWebsiteAuthorityCheckerUrl(d) : 'https://ahrefs.com/website-authority-checker'), fullWidth: true },
+  { id: 'web-archive', name: 'Wayback Machine', category: 'quick', logo: webArchiveLogo, buildUrl: (d) => (d ? `https://web.archive.org/web/*/${d}` : 'https://web.archive.org'), fullWidth: true },
+  { id: 'seo-web-cafe', name: '哥飞工具箱', category: 'quick', logo: seoWebCafeLogo, buildUrl: () => 'https://seo.web.cafe/', fullWidth: true },
   { id: 'gsc', name: 'GSC', category: 'webmaster', logo: gscLogo, buildUrl: () => 'https://search.google.com/search-console' },
   { id: 'bing-webmaster', name: 'Bing', category: 'webmaster', logo: bingLogo, buildUrl: () => 'https://www.bing.com/webmasters' },
   { id: 'ga', name: 'Google Analytics', category: 'analytics', logo: gaLogo, buildUrl: () => 'https://analytics.google.com/analytics/web' },

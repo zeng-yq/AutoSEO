@@ -64,6 +64,15 @@ describe('CountrySelect', () => {
     expect(combo().value).toMatch(/美国/);
   });
 
+  it('聚焦时展开全部选项(而非仅当前项)', () => {
+    // 默认选中美国,聚焦(全选文本)后应展开全部三国,而不是被回显文本过滤到只剩美国
+    render(<CountrySelect value="us" options={OPTS} onChange={() => {}} ariaLabel="国家" />);
+    fireEvent.focus(combo());
+    expect(screen.getByText(/美国/)).toBeInTheDocument();
+    expect(screen.getByText(/德国/)).toBeInTheDocument();
+    expect(screen.getByText(/日本/)).toBeInTheDocument();
+  });
+
   it('渲染 prefixOptions 置顶项', () => {
     render(<CountrySelect value="OFF" options={OPTS} prefixOptions={[{ value: 'OFF', label: '关闭', flag: '🚪', searchKeys: ['关闭', 'off'] }]} onChange={() => {}} ariaLabel="定位" />);
     expect(combo().value).toMatch(/关闭/);

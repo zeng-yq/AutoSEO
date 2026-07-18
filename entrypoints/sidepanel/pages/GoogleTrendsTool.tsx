@@ -14,7 +14,7 @@ interface Last { date: string; compare: string; geo: string; }
 
 export default function GoogleTrendsTool({ keyword }: Props) {
   const [date, setDate] = useState<string>('today 1-m');
-  const [compare, setCompare] = useState<string>('gpts');
+  const [compare, setCompare] = useState<string>('gpts(对比词)');
   const [geo, setGeo] = useState<string>('Worldwide');
 
   useEffect(() => {
@@ -33,7 +33,9 @@ export default function GoogleTrendsTool({ keyword }: Props) {
   }
 
   function open() {
-    const url = buildTrendsUrl(keyword, compare, date, geo);
+    // 默认值带提示后缀「(对比词)」，查询前剥离括号注释，仅保留真实对比词
+    const cmp = compare.replace(/\([^)]*\)/g, '').trim();
+    const url = buildTrendsUrl(keyword, cmp, date, geo);
     chrome.storage.local.set({ [STORAGE_KEY]: { date, compare, geo } });
     chrome.tabs.create({ url });
   }

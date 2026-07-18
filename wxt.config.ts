@@ -9,7 +9,10 @@ export default defineConfig({
     description: 'SEO 快捷工具集合：GSC/Bing 批量提交 + Ahrefs KD 查询',
     permissions: ['tabs', 'sidePanel', 'storage', 'declarativeNetRequestWithHostAccess', 'cookies'],
     host_permissions: ['https://www.bing.com/*', 'https://ahrefs.com/*', '<all_urls>'],
-    action: { default_title: 'QuickSEO' },
+    action: {
+      default_title: 'QuickSEO',
+      default_icon: { '16': 'icon/16.png', '32': 'icon/32.png', '48': 'icon/48.png' },
+    },
     side_panel: { default_path: 'sidepanel/index.html' },
   },
   vite: () => ({

@@ -57,7 +57,13 @@ export default function CountrySelect({
     setText(sel ? display(sel) : (allowFreeText ? value : ''));
   }, [value, editing, allowFreeText, allOptions]);
 
-  const q = text.trim().toLowerCase();
+  // 聚焦后 select() 只全选了 DOM 文本,text 状态仍是当前回显。此时应展开全部选项,
+  // 否则 q 取到「🇺🇸 美国」这类完整回显,过滤后只剩当前项,看着像"只能选美国"。
+  const currentDisplay = (() => {
+    const sel = allOptions.find((o) => o.value === value);
+    return sel ? display(sel) : '';
+  })();
+  const q = text.trim() === currentDisplay ? '' : text.trim().toLowerCase();
   const suggestions = q ? allOptions.filter((o) => matchOption(o, q)) : allOptions;
   const showList = open && suggestions.length > 0;
 

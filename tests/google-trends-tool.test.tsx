@@ -37,4 +37,14 @@ describe('GoogleTrendsTool', () => {
     expect(screen.getByText('美国 (US)')).toBeInTheDocument();      // geo select 显示
     expect(screen.getByDisplayValue('chatgpt')).toBeInTheDocument(); // compare combobox input
   });
+  it('默认对比词显示为 gpts(对比词)，查询链接剥离括号提示', () => {
+    const spy = vi.spyOn(chrome.tabs, 'create');
+    render(<GoogleTrendsTool keyword="apple" />);
+    expect(screen.getByDisplayValue('gpts(对比词)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '点击查询' }));
+    const decoded = decodeURIComponent(spy.mock.calls[0][0].url as string);
+    expect(decoded).toContain('gpts');
+    expect(decoded).not.toContain('对比词');
+    expect(decoded).not.toContain('(');
+  });
 });
